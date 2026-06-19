@@ -1,0 +1,206 @@
+.page {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(251, 191, 36, 0.18), transparent 32%),
+    radial-gradient(circle at 15% 80%, rgba(249, 115, 22, 0.14), transparent 30%),
+    radial-gradient(circle at 85% 75%, rgba(234, 179, 8, 0.1), transparent 28%),
+    #050505;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+  pointer-events: none;
+}
+
+.backgroundGlowOne {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  width: 420px;
+  height: 420px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.18);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.backgroundGlowTwo {
+  position: absolute;
+  right: -120px;
+  bottom: -160px;
+  width: 460px;
+  height: 460px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.14);
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(22px);
+  border-radius: 32px;
+  padding: 44px;
+  text-align: center;
+}
+
+.logoWrap {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 22px;
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(251, 191, 36, 0.22), rgba(249, 115, 22, 0.08));
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 50px rgba(251, 191, 36, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.logo {
+  width: 68px;
+  height: 68px;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fcd34d;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-weight: 950;
+}
+
+.subtitle {
+  margin: 18px auto 0;
+  max-width: 360px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.actions {
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.authActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.guestButton,
+.authButton {
+  height: 54px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 850;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.guestButton {
+  color: #111111;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(255, 255, 255, 0.12);
+}
+
+.guestButton:hover {
+  transform: translateY(-2px);
+  background: #f8fafc;
+  box-shadow: 0 22px 60px rgba(255, 255, 255, 0.18);
+}
+
+.authButton {
+  color: #111111;
+  background: linear-gradient(135deg, #fde68a, #fbbf24 42%, #f97316);
+  box-shadow: 0 16px 38px rgba(251, 191, 36, 0.22);
+}
+
+.authButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 55px rgba(251, 191, 36, 0.32);
+}
+
+.footerText {
+  margin: 28px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 34px 24px;
+    border-radius: 26px;
+  }
+
+  .logoWrap {
+    width: 82px;
+    height: 82px;
+    border-radius: 25px;
+  }
+
+  .logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .title {
+    font-size: 38px;
+  }
+
+  .authActions {
+    grid-template-columns: 1fr;
+  }
+}

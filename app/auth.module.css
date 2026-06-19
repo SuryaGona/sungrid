@@ -1,0 +1,139 @@
+.page {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at top, rgba(251, 191, 36, 0.18), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.14), transparent 32%),
+    #050505;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(circle at center, black, transparent 74%);
+  pointer-events: none;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 470px;
+}
+
+.backLink {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.backLink:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-1px);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.logoWrap {
+  width: 82px;
+  height: 82px;
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(251, 191, 36, 0.24), rgba(249, 115, 22, 0.09));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 52px rgba(251, 191, 36, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  margin-bottom: 16px;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+}
+
+.name {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.06em;
+  margin: 0;
+}
+
+.tagline {
+  margin: 10px 0 0;
+  max-width: 370px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.clerkWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 22px;
+    align-items: flex-start;
+    padding-top: 96px;
+  }
+
+  .backLink {
+    top: 18px;
+    left: 18px;
+  }
+
+  .logoWrap {
+    width: 74px;
+    height: 74px;
+    border-radius: 24px;
+  }
+
+  .logo {
+    width: 54px;
+    height: 54px;
+  }
+
+  .name {
+    font-size: 30px;
+  }
+}

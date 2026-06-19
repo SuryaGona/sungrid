@@ -1,0 +1,206 @@
+.page {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(251, 191, 36, 0.2), transparent 34%),
+    radial-gradient(circle at 15% 85%, rgba(249, 115, 22, 0.14), transparent 32%),
+    #050505;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at center, black, transparent 74%);
+  pointer-events: none;
+}
+
+.glowOne,
+.glowTwo {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.glowOne {
+  top: -180px;
+  left: 50%;
+  width: 480px;
+  height: 480px;
+  transform: translateX(-50%);
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.glowTwo {
+  right: -160px;
+  bottom: -160px;
+  width: 460px;
+  height: 460px;
+  background: rgba(249, 115, 22, 0.13);
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(22px);
+  padding: 42px;
+  text-align: center;
+}
+
+.iconWrap {
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 22px;
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(251, 191, 36, 0.24), rgba(249, 115, 22, 0.09));
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 52px rgba(251, 191, 36, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.icon {
+  width: 58px;
+  height: 58px;
+}
+
+.badge {
+  display: inline-flex;
+  margin: 0 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 8px 13px;
+  color: #fde68a;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.title {
+  margin: 0;
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-weight: 950;
+}
+
+.subtitle {
+  margin: 18px auto 0;
+  max-width: 340px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.actions {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.primaryButton,
+.secondaryButton,
+.textLink {
+  min-height: 52px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 850;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.primaryButton {
+  color: #111111;
+  background: linear-gradient(135deg, #fde68a, #fbbf24 42%, #f97316);
+  box-shadow: 0 18px 45px rgba(251, 191, 36, 0.25);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 55px rgba(251, 191, 36, 0.34);
+}
+
+.secondaryButton {
+  color: white;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.secondaryButton:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.textLink {
+  min-height: auto;
+  width: fit-content;
+  margin: 4px auto 0;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 14px;
+}
+
+.textLink:hover {
+  color: white;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 34px 24px;
+    border-radius: 26px;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .iconWrap {
+    width: 74px;
+    height: 74px;
+    border-radius: 24px;
+  }
+
+  .icon {
+    width: 54px;
+    height: 54px;
+  }
+}
