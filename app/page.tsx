@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-
 import styles from "./page.module.css";
 
 function SunGridLogo() {
@@ -14,7 +13,6 @@ function SunGridLogo() {
             <stop offset="45%" stopColor="#FDBA33" />
             <stop offset="100%" stopColor="#F97316" />
           </linearGradient>
-
           <filter id="sunGlow" x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur stdDeviation="5" result="blur" />
             <feColorMatrix
@@ -91,9 +89,9 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <Link href="/demo/start" className={styles.guestButton}>
+          <a href="/demo/start" className={styles.guestButton}>
             Try Guest Demo
-          </Link>
+          </a>
         </div>
       </section>
     </main>
