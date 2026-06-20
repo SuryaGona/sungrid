@@ -47,23 +47,28 @@ model User {
   email     String   @unique
   name      String?
   imageUrl  String?
+  isGuest   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships      Membership[]
-  reportedIssues   Issue[]       @relation("IssueReporter")
-  assignedIssues   Issue[]       @relation("IssueAssignee")
-  comments         Comment[]
-  activityLogs     ActivityLog[]
+  memberships    Membership[]
+  reportedIssues Issue[]       @relation("IssueReporter")
+  assignedIssues Issue[]       @relation("IssueAssignee")
+  comments       Comment[]
+  activityLogs   ActivityLog[]
+
+  @@index([isGuest])
 }
 
 model Workspace {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
-  slug        String?  @unique
+  slug        String?   @unique
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isGuest     Boolean   @default(false)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   memberships   Membership[]
   projects      Project[]
@@ -73,6 +78,9 @@ model Workspace {
   sprints       Sprint[]
   sprintReports SprintReport[]
   activityLogs  ActivityLog[]
+
+  @@index([isGuest])
+  @@index([expiresAt])
 }
 
 model Membership {
@@ -193,17 +201,17 @@ model Sprint {
 }
 
 model SprintReport {
-  id              String   @id @default(cuid())
-  workspaceId     String
-  sprintId        String   @unique
-  totalIssues     Int      @default(0)
-  completedIssues Int      @default(0)
-  completionRate  Float    @default(0)
-  velocity        Int      @default(0)
-  burndownData    Json?
+  id               String   @id @default(cuid())
+  workspaceId      String
+  sprintId         String   @unique
+  totalIssues      Int      @default(0)
+  completedIssues  Int      @default(0)
+  completionRate   Float    @default(0)
+  velocity         Int      @default(0)
+  burndownData     Json?
   generatedSummary String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   sprint    Sprint    @relation(fields: [sprintId], references: [id], onDelete: Cascade)
@@ -212,15 +220,15 @@ model SprintReport {
 }
 
 model Invite {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   email       String
-  role        Role     @default(MEMBER)
-  token       String   @unique
+  role        Role      @default(MEMBER)
+  token       String    @unique
   acceptedAt  DateTime?
   expiresAt   DateTime?
   workspaceId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
@@ -229,7 +237,7 @@ model Invite {
 }
 
 model ActivityLog {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   action      String
   description String?
   metadata    Json?

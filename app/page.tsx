@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+
 import styles from "./page.module.css";
 
 function SunGridLogo() {
@@ -70,20 +71,16 @@ export default async function HomePage() {
       <section className={styles.card}>
         <SunGridLogo />
 
-        <div className={styles.brand}>SunGrid</div>
+        <p className={styles.brand}>SunGrid</p>
 
-        <h1 className={styles.title}>Welcome to SunGrid</h1>
+        <h1 className={styles.title}>Turn team work into clear progress.</h1>
 
         <p className={styles.subtitle}>
-          Manage projects, issues, boards, sprints, and team activity from one
-          focused workspace.
+          Plan projects, manage issues, run sprints, and track activity in one
+          workspace.
         </p>
 
         <div className={styles.actions}>
-          <Link href="/demo" className={styles.guestButton}>
-            Continue as Guest
-          </Link>
-
           <div className={styles.authActions}>
             <Link href="/sign-in" className={styles.authButton}>
               Sign In
@@ -93,11 +90,11 @@ export default async function HomePage() {
               Create Account
             </Link>
           </div>
-        </div>
 
-        <p className={styles.footerText}>
-          Guest access is read-only. Sign in or create an account to manage your own workspace.
-        </p>
+          <Link href="/demo/start" className={styles.guestButton}>
+            Try Guest Demo
+          </Link>
+        </div>
       </section>
     </main>
   );
