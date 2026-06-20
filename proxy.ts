@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const GUEST_COOKIE_NAME = "sungrid_guest_user_id";
 
-const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
+const isGuestAllowedApiRoute = createRouteMatcher(["/api/workspaces(.*)"]);
 
 const isClerkProtectedRoute = createRouteMatcher([
   "/onboarding(.*)",
@@ -12,12 +12,7 @@ const isClerkProtectedRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   const hasGuestCookie = Boolean(req.cookies.get(GUEST_COOKIE_NAME)?.value);
 
-  if (isDashboardRoute(req)) {
-    if (hasGuestCookie) {
-      return;
-    }
-
-    await auth.protect();
+  if (hasGuestCookie && isGuestAllowedApiRoute(req)) {
     return;
   }
 

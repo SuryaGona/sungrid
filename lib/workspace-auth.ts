@@ -78,6 +78,46 @@ async function getAuthenticatedUser(workspaceId: string) {
   );
 }
 
+async function getGuestWorkspaceFallback(workspaceId: string) {
+  return retryAsync(
+    () =>
+      prisma.workspace.findFirst({
+        where: {
+          id: workspaceId,
+          isGuest: true,
+          OR: [
+            {
+              expiresAt: null,
+            },
+            {
+              expiresAt: {
+                gt: new Date(),
+              },
+            },
+          ],
+        },
+        include: {
+          memberships: {
+            where: {
+              user: {
+                isGuest: true,
+              },
+            },
+            include: {
+              user: true,
+            },
+            take: 1,
+          },
+        },
+      }),
+    {
+      retries: 3,
+      delayMs: 700,
+      label: "guest workspace fallback lookup",
+    },
+  );
+}
+
 export async function requireWorkspaceAccess(workspaceId: string) {
   let userWithMembership;
 
@@ -90,26 +130,46 @@ export async function requireWorkspaceAccess(workspaceId: string) {
 
   const membership = userWithMembership?.memberships[0];
 
-  if (!userWithMembership || !membership) {
-    redirect("/sign-in");
+  if (userWithMembership && membership) {
+    const workspace = membership.workspace;
+
+    if (
+      workspace.isGuest &&
+      workspace.expiresAt &&
+      workspace.expiresAt.getTime() < Date.now()
+    ) {
+      redirect("/");
+    }
+
+    return {
+      clerkUserId: userWithMembership.clerkId,
+      user: userWithMembership,
+      membership,
+      workspace,
+    };
   }
 
-  const workspace = membership.workspace;
+  let guestWorkspace;
 
-  if (
-    workspace.isGuest &&
-    workspace.expiresAt &&
-    workspace.expiresAt.getTime() < Date.now()
-  ) {
-    redirect("/");
+  try {
+    guestWorkspace = await getGuestWorkspaceFallback(workspaceId);
+  } catch (error) {
+    console.error("Guest workspace fallback failed after retries:", error);
+    throw new WorkspaceDatabaseError();
   }
 
-  return {
-    clerkUserId: userWithMembership.clerkId,
-    user: userWithMembership,
-    membership,
-    workspace,
-  };
+  const guestMembership = guestWorkspace?.memberships[0];
+
+  if (guestWorkspace && guestMembership) {
+    return {
+      clerkUserId: guestMembership.user.clerkId,
+      user: guestMembership.user,
+      membership: guestMembership,
+      workspace: guestWorkspace,
+    };
+  }
+
+  redirect("/sign-in");
 }
 
 export async function requireWorkspaceRole(
