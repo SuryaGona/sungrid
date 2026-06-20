@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/cleanup-guests",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
