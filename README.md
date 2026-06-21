@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SunGrid
 
-## Getting Started
+SunGrid is a multi-tenant project management SaaS inspired by modern agile workflow platforms. Teams collaborate within isolated workspaces containing projects, issues, boards, sprints, and activity history while maintaining strict workspace-level access boundaries.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Workspace Management
+
+* Multi-tenant workspace architecture with isolated project and member data
+* Workspace membership managed through dedicated access records
+* Activity tracking across projects and team actions
+
+### Authentication & Authorization
+
+* Authentication powered by Clerk
+* Workspace-scoped authorization enforced through access records
+* Protected server-side routes and actions using Next.js
+
+### Project & Issue Tracking
+
+* Project organization within workspaces
+* Issue management with status, priority, type, story points, and due dates
+* Archive and restore workflows for projects and issues
+* Activity logging for project changes
+
+### Agile Workflow Tools
+
+* Kanban-style project boards
+* Sprint planning and tracking
+* Sprint completion reporting and analytics
+
+### Demo Environment
+
+* One-click guest access for product evaluation
+* Automatically seeded demo workspaces, projects, and issues
+* Demo data isolated from production user environments
+
+## Tech Stack
+
+| Category       | Technology           |
+| -------------- | -------------------- |
+| Framework      | Next.js (App Router) |
+| Language       | TypeScript           |
+| Database       | PostgreSQL (Neon)    |
+| ORM            | Prisma               |
+| Authentication | Clerk                |
+| Styling        | Tailwind CSS         |
+| Deployment     | Vercel               |
+
+## Architecture
+
+SunGrid uses a relational multi-tenant architecture where workspace membership is represented through access records rather than relying solely on user authentication.
+
+```txt
+User → Access Record → Workspace → Project → Issue
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This model ensures that every project, issue, sprint, and activity record is scoped to a workspace through explicit relationships, simplifying authorization checks and reducing the risk of cross-workspace data exposure.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Engineering Highlights
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Multi-Tenant Access Model
 
-## Learn More
+Designed a relational access layer that separates authentication from authorization. Users authenticate globally, while workspace permissions are enforced through access records tied to individual workspaces.
 
-To learn more about Next.js, take a look at the following resources:
+### Server-Side Authorization
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Implemented authorization checks within protected server routes and actions to ensure workspace resources can only be accessed by authorized members.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Relational Data Design
 
-## Deploy on Vercel
+Built a PostgreSQL schema connecting users, workspaces, access records, projects, issues, sprints, and activity logs while preserving referential integrity across the application.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Archive & Recovery Workflows
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Implemented soft-delete functionality for projects and issues, allowing data recovery without permanently removing records from the system.
+
+### Production Deployment
+
+Deployed on Vercel with Prisma and Neon, including connection management optimized for a serverless environment.
+
+## Future Enhancements
+
+* Workspace invitation system with expiring invite tokens
+* Granular role-based permissions (Viewer, Contributor, Admin)
+* Real-time notifications for assignments and status changes
+* Velocity metrics and burndown reporting
+* Team productivity and sprint performance analytics
