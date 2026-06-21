@@ -79,11 +79,3 @@ Implemented soft-delete functionality for projects and issues, allowing data rec
 
 Deployed on Vercel with Prisma and Neon, including connection management optimized for a serverless environment.
 
-## Future Enhancements
-
-* Workspace invitation system with expiring invite tokens
-* Granular role-based permissions (Viewer, Contributor, Admin)
-* Real-time notifications for assignments and status changes
-* Velocity metrics and burndown reporting
-* Team productivity and sprint performance analytics (Included all this)
-  
