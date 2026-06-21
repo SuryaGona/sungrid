@@ -85,4 +85,5 @@ Deployed on Vercel with Prisma and Neon, including connection management optimiz
 * Granular role-based permissions (Viewer, Contributor, Admin)
 * Real-time notifications for assignments and status changes
 * Velocity metrics and burndown reporting
-* Team productivity and sprint performance analytics
+* Team productivity and sprint performance analytics (Included all this)
+  
