@@ -1,9 +1,9 @@
-import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { prisma } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/workspace-auth";
+import layoutStyles from "../workspace-dashboard.module.css";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -399,37 +399,34 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
   })).filter((row) => row.value > 0);
 
   return (
-    <main className="min-h-screen bg-[#11131a]">
-      <header className="border-b border-white/10 bg-white/[0.04]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
-              SunGrid
-            </p>
+    <main className={layoutStyles.page}>
+      <div className={layoutStyles.backgroundGlowOne} />
+      <div className={layoutStyles.backgroundGlowTwo} />
 
-            <h1 className="text-xl font-black text-white">{workspace.name}</h1>
-          </div>
-
-          <UserButton />
-        </div>
-      </header>
-
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
+      <div className={layoutStyles.shell}>
         <DashboardSidebar workspaceId={workspaceId} activePage="analytics" />
 
-        <section className="space-y-6">
+        <section className={layoutStyles.content}>
           <div className={cardClass}>
             <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
               Workspace intelligence
             </p>
 
-            <div className="mt-2">
-              <h2 className="text-3xl font-black text-white">Analytics</h2>
+            <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div className="min-w-0">
+                <h1 className="break-words text-4xl font-black tracking-tight text-white md:text-5xl">
+                  Analytics
+                </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
-                Real operational metrics from members, projects, active issues,
-                sprint reports, and activity logs.
-              </p>
+                <p className="mt-3 max-w-2xl break-words text-sm leading-6 text-white/50">
+                  Real operational metrics from members, projects, active
+                  issues, sprint reports, and activity logs.
+                </p>
+              </div>
+
+              <span className="w-fit rounded-full border border-white/10 bg-black/35 px-4 py-2 text-sm font-black text-white/55">
+                {workspace.name}
+              </span>
             </div>
           </div>
 
@@ -516,15 +513,15 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
 
           <section className={cardClass}>
             <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
-              Workspace Health
+              Workspace health
             </p>
 
-            <h3 className="mt-3 text-3xl font-black tracking-tight text-white">
+            <h2 className="mt-3 text-2xl font-black text-white">
               Current work
-            </h3>
+            </h2>
 
-            <div className="mt-6 flex flex-row gap-4">
-              <div className="min-w-0 flex-1 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-[2rem] border border-white/10 bg-black/25 p-6">
                 <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">
                   Activity
                 </p>
@@ -534,7 +531,7 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
                 </p>
               </div>
 
-              <div className="min-w-0 flex-1 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <div className="rounded-[2rem] border border-white/10 bg-black/25 p-6">
                 <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">
                   Open
                 </p>
@@ -544,7 +541,7 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
                 </p>
               </div>
 
-              <div className="min-w-0 flex-1 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <div className="rounded-[2rem] border border-white/10 bg-black/25 p-6">
                 <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">
                   Done
                 </p>
@@ -560,7 +557,7 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
                 {latestSprintReports.slice(0, 2).map((report) => (
                   <div
                     key={report.id}
-                    className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]"
+                    className="rounded-[2rem] border border-white/10 bg-black/25 p-6 transition hover:border-white/15 hover:bg-white/[0.04]"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
@@ -607,16 +604,16 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
           <section className={cardClass}>
             <div>
               <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
-                Recent Activity
+                Recent activity
               </p>
 
-              <h3 className="mt-3 text-3xl font-black tracking-tight text-white">
+              <h2 className="mt-3 text-2xl font-black text-white">
                 Latest updates
-              </h3>
+              </h2>
             </div>
 
             {recentActivityLogs.length === 0 ? (
-              <div className="mt-6 rounded-[2rem] border border-dashed border-white/10 bg-white/[0.04] p-6">
+              <div className="mt-6 rounded-[2rem] border border-dashed border-white/10 bg-black/25 p-6">
                 <p className="text-sm text-white/45">
                   No activity recorded yet.
                 </p>
@@ -626,7 +623,7 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
                 {recentActivityLogs.slice(0, 4).map((log) => (
                   <div
                     key={log.id}
-                    className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]"
+                    className="rounded-[2rem] border border-white/10 bg-black/25 p-6 transition hover:border-white/15 hover:bg-white/[0.04]"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
