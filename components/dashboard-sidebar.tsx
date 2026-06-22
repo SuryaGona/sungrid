@@ -95,7 +95,6 @@ export async function DashboardSidebar({
           </Link>
         ) : (
           <UserButton
-            fallbackRedirectUrl="/"
             appearance={{
               elements: {
                 userButtonAvatarBox:
