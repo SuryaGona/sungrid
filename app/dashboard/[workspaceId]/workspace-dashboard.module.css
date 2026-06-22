@@ -54,10 +54,10 @@
 }
 
 .headerInner {
-  max-width: 1280px;
+  width: min(1720px, calc(100vw - 56px));
   margin: 0 auto;
   min-height: 82px;
-  padding: 0 28px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -142,16 +142,18 @@
 .shell {
   position: relative;
   z-index: 1;
-  max-width: 1280px;
+  width: min(1720px, calc(100vw - 56px));
   margin: 0 auto;
-  padding: 28px;
+  padding: 28px 0;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 32px;
 }
 
 .content {
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 20px;
 }
@@ -200,6 +202,34 @@
   line-height: 1.7;
 }
 
+.guestNote {
+  margin-top: 18px;
+  max-width: 650px;
+  border-radius: 18px;
+  border: 1px solid rgba(251, 191, 36, 0.13);
+  background:
+    linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(249, 115, 22, 0.035)),
+    rgba(255, 255, 255, 0.035);
+  padding: 14px 16px;
+}
+
+.guestNote strong {
+  display: block;
+  margin: 0;
+  color: rgba(255, 247, 204, 0.94);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.guestNote span {
+  display: block;
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .roleCard {
   min-width: 160px;
   border-radius: 20px;
@@ -226,11 +256,12 @@
 
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
 .metricCard {
+  min-width: 0;
   border-radius: 24px;
   padding: 22px;
 }
@@ -266,6 +297,7 @@
 }
 
 .panel {
+  min-width: 0;
   border-radius: 28px;
   padding: 24px;
 }
@@ -298,11 +330,12 @@
 
 .healthGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
 .healthGrid div {
+  min-width: 0;
   border-radius: 18px;
   background: #050505;
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -360,6 +393,7 @@
 
 .activityItem,
 .emptyState {
+  min-width: 0;
   border-radius: 18px;
   background: #050505;
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -407,9 +441,15 @@
   font-size: 13px;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .shell {
+    width: min(100%, calc(100vw - 40px));
     grid-template-columns: 1fr;
+    padding: 20px 0;
+  }
+
+  .headerInner {
+    width: min(100%, calc(100vw - 40px));
   }
 
   .mainGrid {
@@ -418,14 +458,6 @@
 }
 
 @media (max-width: 820px) {
-  .headerInner {
-    padding: 0 20px;
-  }
-
-  .shell {
-    padding: 20px;
-  }
-
   .heroCard {
     align-items: flex-start;
     flex-direction: column;
@@ -437,7 +469,7 @@
 
   .metricsGrid,
   .healthGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -448,6 +480,11 @@
 
   .workspaceBrand h1 {
     font-size: 20px;
+  }
+
+  .shell,
+  .headerInner {
+    width: min(100%, calc(100vw - 28px));
   }
 
   .metricsGrid,

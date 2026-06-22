@@ -1,9 +1,9 @@
-import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { prisma } from "@/lib/db";
 import { requireWorkspaceRole } from "@/lib/workspace-auth";
+import layoutStyles from "../workspace-dashboard.module.css";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +13,21 @@ type ActivityPageProps = {
     workspaceId: string;
   }>;
 };
+
+const cardClass =
+  "rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]";
+
+const innerCardClass =
+  "rounded-[2rem] border border-white/10 bg-black/25 p-5";
+
+const eventCardClass =
+  "rounded-[2rem] border border-white/10 bg-black/25 p-6 transition hover:border-white/15 hover:bg-white/[0.04]";
+
+const neutralPillClass =
+  "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/45";
+
+const linkPillClass =
+  "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/45 transition hover:border-amber-300/25 hover:text-white";
 
 function formatAction(action: string) {
   return action
@@ -39,7 +54,7 @@ function getActionTone(action: string) {
     action.includes("cancelled") ||
     action.includes("removed")
   ) {
-    return "border-amber-200 bg-amber-50 text-amber-800";
+    return "border-amber-300/20 bg-amber-300/10 text-amber-200";
   }
 
   if (
@@ -48,14 +63,14 @@ function getActionTone(action: string) {
     action.includes("created") ||
     action.includes("started")
   ) {
-    return "border-green-200 bg-green-50 text-green-800";
+    return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
   }
 
   if (action.includes("updated") || action.includes("moved")) {
-    return "border-blue-200 bg-blue-50 text-blue-800";
+    return "border-sky-300/20 bg-sky-300/10 text-sky-200";
   }
 
-  return "border-gray-200 bg-gray-50 text-gray-700";
+  return "border-white/10 bg-white/[0.04] text-white/50";
 }
 
 function getActorName(user: { name: string | null; email: string } | null) {
@@ -69,10 +84,7 @@ function getActorName(user: { name: string | null; email: string } | null) {
 export default async function ActivityPage({ params }: ActivityPageProps) {
   const { workspaceId } = await params;
 
-  const { workspace } = await requireWorkspaceRole(workspaceId, [
-    "OWNER",
-    "ADMIN",
-  ]);
+  await requireWorkspaceRole(workspaceId, ["OWNER", "ADMIN"]);
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -145,149 +157,144 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
   ]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">SunGrid</p>
-            <h1 className="text-xl font-bold text-gray-900">
-              {workspace.name}
-            </h1>
-          </div>
+    <main className={layoutStyles.page}>
+      <div className={layoutStyles.backgroundGlowOne} />
+      <div className={layoutStyles.backgroundGlowTwo} />
 
-          <UserButton />
-        </div>
-      </header>
-
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
+      <div className={layoutStyles.shell}>
         <DashboardSidebar workspaceId={workspaceId} activePage="activity" />
 
-        <section className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+        <section className={layoutStyles.content}>
+          <header className={cardClass}>
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
               Workspace audit trail
             </p>
 
-            <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">Activity</h2>
+            <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div className="min-w-0">
+                <h1 className="break-words text-4xl font-black tracking-tight text-white md:text-5xl">
+                  Activity
+                </h1>
 
-                <p className="mt-2 max-w-2xl text-gray-600">
+                <p className="mt-3 max-w-2xl break-words text-sm leading-6 text-white/50">
                   A clean record of important workspace actions across projects,
                   issues, sprints, reports, and members.
                 </p>
               </div>
 
-              <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
+              <span className="w-fit rounded-full border border-white/10 bg-black/35 px-4 py-2 text-sm font-black text-white/55">
                 Admin view
               </span>
             </div>
-          </div>
+          </header>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Total events</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {totalActivityLogs}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                All recorded workspace actions
-              </p>
-            </div>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[
+              {
+                label: "Total events",
+                value: totalActivityLogs,
+                helper: "All recorded workspace actions",
+              },
+              {
+                label: "Last 7 days",
+                value: activityLast7Days,
+                helper: "Recent team movement",
+              },
+              {
+                label: "Last 30 days",
+                value: activityLast30Days,
+                helper: "Monthly operational history",
+              },
+            ].map((stat) => (
+              <div key={stat.label} className={cardClass}>
+                <p className="text-sm font-bold text-white/45">{stat.label}</p>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Last 7 days</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {activityLast7Days}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Recent team movement
-              </p>
-            </div>
+                <p className="mt-2 text-3xl font-black tracking-tight text-white">
+                  {stat.value}
+                </p>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Last 30 days</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {activityLast30Days}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Monthly operational history
-              </p>
-            </div>
-          </div>
+                <p className="mt-2 text-sm text-white/35">{stat.helper}</p>
+              </div>
+            ))}
+          </section>
 
           {activityGroups.length > 0 ? (
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <section className={cardClass}>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">
+                Action patterns
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-white">
                 Common actions
-              </h3>
+              </h2>
 
               <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {activityGroups.map((group) => (
-                  <div
-                    key={group.action}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-                  >
-                    <p className="text-sm font-semibold text-gray-900">
+                  <div key={group.action} className={innerCardClass}>
+                    <p className="break-words text-sm font-black text-white">
                       {formatAction(group.action)}
                     </p>
 
-                    <p className="mt-2 text-2xl font-bold text-gray-900">
+                    <p className="mt-2 text-2xl font-black tracking-tight text-white">
                       {group._count._all}
                     </p>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           ) : null}
 
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <section className={cardClass}>
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">
                 Latest events
-              </h3>
+              </p>
 
-              <p className="mt-1 text-sm text-gray-600">
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Recent audit history
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-white/45">
                 Showing the latest 50 audit events for this workspace.
               </p>
             </div>
 
             {activityLogs.length === 0 ? (
-              <div className="p-6">
-                <p className="text-sm text-gray-600">
+              <div className="mt-6 rounded-[2rem] border border-dashed border-white/10 bg-black/25 p-6">
+                <p className="text-sm leading-6 text-white/45">
                   No activity yet. Create projects, issues, sprints, or reports
                   to start building the audit trail.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="mt-6 grid gap-4">
                 {activityLogs.map((log) => (
-                  <div key={log.id} className="p-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div key={log.id} className={eventCardClass}>
+                    <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getActionTone(
+                            className={`rounded-full border px-3 py-1 text-xs font-black ${getActionTone(
                               log.action,
                             )}`}
                           >
                             {formatAction(log.action)}
                           </span>
 
-                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                          <span className={neutralPillClass}>
                             {getActorName(log.user)}
                           </span>
                         </div>
 
-                        <p className="mt-3 text-sm leading-6 text-gray-700">
+                        <p className="mt-3 break-words text-sm leading-6 text-white/55">
                           {log.description || "Workspace action recorded."}
                         </p>
 
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
+                        <div className="mt-3 flex flex-wrap gap-2">
                           {log.project ? (
                             <Link
                               href={`/dashboard/${workspaceId}/projects/${log.project.id}`}
-                              className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-600 hover:bg-gray-200"
+                              className={linkPillClass}
                             >
                               Project: {log.project.name}
                             </Link>
@@ -296,12 +303,12 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
                           {log.issue && log.project ? (
                             <Link
                               href={`/dashboard/${workspaceId}/projects/${log.project.id}/issues/${log.issue.id}`}
-                              className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-600 hover:bg-gray-200"
+                              className={linkPillClass}
                             >
                               Issue: {log.issue.title}
                             </Link>
                           ) : log.issue ? (
-                            <span className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-600">
+                            <span className={neutralPillClass}>
                               Issue: {log.issue.title}
                             </span>
                           ) : null}
@@ -309,19 +316,19 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
                           {log.sprint && log.project ? (
                             <Link
                               href={`/dashboard/${workspaceId}/projects/${log.project.id}/sprints`}
-                              className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-600 hover:bg-gray-200"
+                              className={linkPillClass}
                             >
                               Sprint: {log.sprint.name}
                             </Link>
                           ) : log.sprint ? (
-                            <span className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-600">
+                            <span className={neutralPillClass}>
                               Sprint: {log.sprint.name}
                             </span>
                           ) : null}
                         </div>
                       </div>
 
-                      <p className="shrink-0 text-xs font-medium text-gray-500">
+                      <p className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/35">
                         {formatDateTime(log.createdAt)}
                       </p>
                     </div>
@@ -329,7 +336,7 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </section>
       </div>
     </main>

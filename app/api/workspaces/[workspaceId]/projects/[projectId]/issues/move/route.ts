@@ -1,10 +1,13 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { logActivity } from "@/lib/activity";
 import { prisma } from "@/lib/db";
+
+const GUEST_COOKIE_NAME = "sungrid_guest_user_id";
 
 const ISSUE_STATUSES = [
   "BACKLOG",
@@ -34,21 +37,87 @@ function formatEnum(value: string) {
     .join(" ");
 }
 
+async function getRequestUserWithMembership(workspaceId: string) {
+  const { userId } = await auth();
+
+  if (userId) {
+    return prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+      include: {
+        memberships: {
+          where: {
+            workspaceId,
+          },
+          include: {
+            workspace: true,
+          },
+        },
+      },
+    });
+  }
+
+  const cookieStore = await cookies();
+  const guestUserId = cookieStore.get(GUEST_COOKIE_NAME)?.value;
+
+  if (!guestUserId) {
+    return null;
+  }
+
+  return prisma.user.findFirst({
+    where: {
+      id: guestUserId,
+      isGuest: true,
+    },
+    include: {
+      memberships: {
+        where: {
+          workspaceId,
+        },
+        include: {
+          workspace: true,
+        },
+      },
+    },
+  });
+}
+
+async function getGuestWorkspaceFallback(workspaceId: string) {
+  return prisma.workspace.findFirst({
+    where: {
+      id: workspaceId,
+      isGuest: true,
+      OR: [
+        {
+          expiresAt: null,
+        },
+        {
+          expiresAt: {
+            gt: new Date(),
+          },
+        },
+      ],
+    },
+    include: {
+      memberships: {
+        where: {
+          user: {
+            isGuest: true,
+          },
+        },
+        include: {
+          user: true,
+          workspace: true,
+        },
+        take: 1,
+      },
+    },
+  });
+}
+
 export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
   const { workspaceId, projectId } = await params;
-
-  const clerkUser = await currentUser();
-
-  if (!clerkUser) {
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-      },
-      {
-        status: 401,
-      }
-    );
-  }
 
   const body = await request.json().catch(() => null);
   const parsed = moveIssueSchema.safeParse(body);
@@ -66,25 +135,42 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
 
   const { issueId, status } = parsed.data;
 
-  const user = await prisma.user.findUnique({
-    where: {
-      clerkId: clerkUser.id,
-    },
-    include: {
-      memberships: {
-        where: {
-          workspaceId,
-        },
-      },
-    },
-  });
+  const userWithMembership = await getRequestUserWithMembership(workspaceId);
 
-  const membership = user?.memberships[0];
+  let user = userWithMembership;
+  let membership = userWithMembership?.memberships[0];
+  let workspace = membership?.workspace;
 
-  if (!user || !membership) {
+  if (!user || !membership || !workspace) {
+    const guestWorkspace = await getGuestWorkspaceFallback(workspaceId);
+    const guestMembership = guestWorkspace?.memberships[0];
+
+    if (guestWorkspace && guestMembership) {
+      user = guestMembership.user;
+      membership = guestMembership;
+      workspace = guestWorkspace;
+    }
+  }
+
+  if (!user || !membership || !workspace) {
     return NextResponse.json(
       {
         error: "Forbidden",
+      },
+      {
+        status: 403,
+      }
+    );
+  }
+
+  if (
+    workspace.isGuest &&
+    workspace.expiresAt &&
+    workspace.expiresAt.getTime() < Date.now()
+  ) {
+    return NextResponse.json(
+      {
+        error: "Guest workspace expired",
       },
       {
         status: 403,

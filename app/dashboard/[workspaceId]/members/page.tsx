@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -10,6 +9,7 @@ import {
   requireWorkspaceAccess,
   requireWorkspaceRole,
 } from "@/lib/workspace-auth";
+import layoutStyles from "../workspace-dashboard.module.css";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +40,30 @@ const removeMemberSchema = z.object({
   workspaceId: z.string().min(1),
   membershipId: z.string().min(1),
 });
+
+const cardClass =
+  "rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]";
+
+const innerCardClass =
+  "rounded-[2rem] border border-white/10 bg-black/25 p-5";
+
+const inputClass =
+  "mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-bold text-white outline-none transition placeholder:text-white/25 focus:border-amber-300/40 focus:ring-2 focus:ring-amber-300/20";
+
+const selectClass =
+  "rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-bold text-white outline-none transition focus:border-amber-300/40 focus:ring-2 focus:ring-amber-300/20";
+
+const primaryButtonClass =
+  "w-full rounded-2xl border border-amber-300/30 bg-amber-300 px-4 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-amber-200 active:translate-y-0 active:scale-[0.98]";
+
+const secondaryButtonClass =
+  "rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-black text-white/60 transition hover:-translate-y-0.5 hover:border-amber-300/25 hover:text-white active:translate-y-0 active:scale-[0.98]";
+
+const dangerButtonClass =
+  "rounded-2xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-sm font-black text-red-200 transition hover:-translate-y-0.5 hover:bg-red-400/15 active:translate-y-0 active:scale-[0.98]";
+
+const protectedNoticeClass =
+  "w-fit rounded-[1.5rem] border border-white/10 bg-black/30 px-5 py-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)]";
 
 function membersPageUrl(workspaceId: string, params?: Record<string, string>) {
   const searchParams = new URLSearchParams(params);
@@ -89,6 +113,10 @@ function getRoleDescription(role: string) {
   }
 
   return "Can access workspace work and contribute to project execution.";
+}
+
+function getGuestRoleDescription() {
+  return "Guest demo access lets you explore this sample workspace while owner permissions stay protected behind the scenes.";
 }
 
 function canManageMembers(role: string) {
@@ -342,9 +370,12 @@ export default async function MembersPage({
   const errorMessage = getMessage(resolvedSearchParams.error);
   const successMessage = getMessage(resolvedSearchParams.success);
 
-  const { workspace, user, membership } = await requireWorkspaceAccess(
+  const { user, membership, workspace } = await requireWorkspaceAccess(
     workspaceId,
   );
+
+  const isGuestWorkspace = Boolean(user.isGuest || workspace.isGuest);
+  const roleLabel = isGuestWorkspace ? "Guest" : formatRole(membership.role);
 
   const members = await prisma.membership.findMany({
     where: {
@@ -372,117 +403,103 @@ export default async function MembersPage({
   const canManage = canManageMembers(membership.role);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">SunGrid</p>
-            <h1 className="text-xl font-bold text-gray-900">
-              {workspace.name}
-            </h1>
-          </div>
+    <main className={layoutStyles.page}>
+      <div className={layoutStyles.backgroundGlowOne} />
+      <div className={layoutStyles.backgroundGlowTwo} />
 
-          <UserButton />
-        </div>
-      </header>
-
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
+      <div className={layoutStyles.shell}>
         <DashboardSidebar workspaceId={workspaceId} activePage="members" />
 
-        <section className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+        <section className={layoutStyles.content}>
+          <header className={cardClass}>
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
               Workspace access
             </p>
 
-            <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">Members</h2>
+            <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div className="min-w-0">
+                <h1 className="break-words text-4xl font-black tracking-tight text-white md:text-5xl">
+                  Members
+                </h1>
 
-                <p className="mt-2 max-w-2xl text-gray-600">
+                <p className="mt-3 max-w-2xl break-words text-sm leading-6 text-white/50">
                   Manage who can access this workspace and what each person is
                   allowed to control.
                 </p>
               </div>
 
-              <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
-                Your role: {formatRole(membership.role)}
+              <span className="w-fit rounded-full border border-white/10 bg-black/35 px-4 py-2 text-sm font-black text-white/55">
+                Your role: {roleLabel}
               </span>
             </div>
-          </div>
+          </header>
 
           {errorMessage ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="rounded-[1.5rem] border border-red-400/25 bg-red-400/10 p-5 text-sm font-bold leading-6 text-red-100">
               {errorMessage}
             </div>
           ) : null}
 
           {successMessage ? (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+            <div className="rounded-[1.5rem] border border-emerald-400/25 bg-emerald-400/10 p-5 text-sm font-bold leading-6 text-emerald-100">
               {successMessage}
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Total members</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {members.length}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Workspace access seats
-              </p>
-            </div>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            {[
+              {
+                label: "Total members",
+                value: members.length,
+                helper: "Workspace access seats",
+              },
+              {
+                label: "Owners",
+                value: ownerCount,
+                helper: "Full workspace control",
+              },
+              {
+                label: "Admins",
+                value: adminCount,
+                helper: "Delivery operations",
+              },
+              {
+                label: "Members",
+                value: memberCount,
+                helper: "Project contributors",
+              },
+            ].map((stat) => (
+              <div key={stat.label} className={cardClass}>
+                <p className="text-sm font-bold text-white/45">{stat.label}</p>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Owners</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {ownerCount}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Full workspace control
-              </p>
-            </div>
+                <p className="mt-2 text-3xl font-black tracking-tight text-white">
+                  {stat.value}
+                </p>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Admins</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {adminCount}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Delivery operations
-              </p>
-            </div>
+                <p className="mt-2 text-sm text-white/35">{stat.helper}</p>
+              </div>
+            ))}
+          </section>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Members</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {memberCount}
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className={`${cardClass} lg:col-span-2`}>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">
+                Permissions
               </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Project contributors
-              </p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h2 className="mt-3 text-2xl font-black text-white">
                 Role permissions
-              </h3>
+              </h2>
 
               <div className="mt-5 grid gap-3">
                 {["OWNER", "ADMIN", "MEMBER"].map((role) => (
-                  <div
-                    key={role}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-                  >
+                  <div key={role} className={innerCardClass}>
                     <div className="flex items-center justify-between gap-4">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-black text-white">
                         {formatRole(role)}
                       </p>
 
-                      <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-gray-600">
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/45">
                         {role === "OWNER"
                           ? "Full access"
                           : role === "ADMIN"
@@ -491,7 +508,7 @@ export default async function MembersPage({
                       </span>
                     </div>
 
-                    <p className="mt-2 text-sm leading-6 text-gray-600">
+                    <p className="mt-2 text-sm leading-6 text-white/45">
                       {getRoleDescription(role)}
                     </p>
                   </div>
@@ -499,12 +516,16 @@ export default async function MembersPage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Add member
-              </h3>
+            <div className={cardClass}>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">
+                Invite access
+              </p>
 
-              <p className="mt-2 text-sm leading-6 text-gray-600">
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Add member
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-white/45">
                 Add an existing SunGrid user by email. They must have signed in
                 at least once before they can be added.
               </p>
@@ -516,7 +537,7 @@ export default async function MembersPage({
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-black text-white/55"
                     >
                       Email
                     </label>
@@ -527,14 +548,14 @@ export default async function MembersPage({
                       type="email"
                       required
                       placeholder="teammate@example.com"
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
+                      className={inputClass}
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="role"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-black text-white/55"
                     >
                       Role
                     </label>
@@ -543,149 +564,166 @@ export default async function MembersPage({
                       id="role"
                       name="role"
                       defaultValue="MEMBER"
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
+                      className={`${inputClass} cursor-pointer`}
                     >
                       <option value="MEMBER">Member</option>
                       <option value="ADMIN">Admin</option>
                     </select>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full rounded-md bg-black px-4 py-2 text-sm font-medium text-white"
-                  >
+                  <button type="submit" className={primaryButtonClass}>
                     Add member
                   </button>
                 </form>
               ) : (
-                <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-sm text-gray-600">
+                <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                  <p className="text-sm leading-6 text-white/45">
                     Only workspace owners can add members or change roles.
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <section className={cardClass}>
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">
                 Workspace team
-              </h3>
+              </p>
 
-              <p className="mt-1 text-sm text-gray-600">
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Current members
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-white/45">
                 Current users with access to this workspace.
               </p>
             </div>
 
-            <div className="divide-y divide-gray-200">
+            <div className="mt-6 grid gap-4">
               {members.map((member) => {
                 const isCurrentUser = member.userId === user.id;
                 const isOwner = member.role === "OWNER";
-                const canEditThisMember = canManage && !isCurrentUser && !isOwner;
+                const isCurrentGuestUser =
+                  isGuestWorkspace && isCurrentUser && isOwner;
+                const canEditThisMember =
+                  canManage && !isCurrentUser && !isOwner;
+
+                const memberRoleLabel = isCurrentGuestUser
+                  ? "Guest"
+                  : formatRole(member.role);
+
+                const memberDescription = isCurrentGuestUser
+                  ? getGuestRoleDescription()
+                  : getRoleDescription(member.role);
+
+                const protectedMessage = isCurrentGuestUser
+                  ? "Demo access protected."
+                  : isOwner
+                    ? "Owner is protected."
+                    : isCurrentUser
+                      ? "Your own role is protected."
+                      : "View only.";
 
                 return (
                   <div
                     key={member.id}
-                    className="flex flex-col gap-5 p-6 lg:flex-row lg:items-start lg:justify-between"
+                    className="rounded-[2rem] border border-white/10 bg-black/25 p-6 transition hover:border-white/15 hover:bg-white/[0.04]"
                   >
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {member.user.name || member.user.email}
-                        </p>
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="break-words text-base font-black text-white">
+                            {member.user.name || member.user.email}
+                          </p>
 
-                        {isCurrentUser ? (
-                          <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                            You
+                          {isCurrentUser ? (
+                            <span className="rounded-full border border-white/70 bg-white/[0.04] px-3 py-1 text-xs font-black text-white">
+                              You
+                            </span>
+                          ) : null}
+
+                          <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/45">
+                            {memberRoleLabel}
                           </span>
-                        ) : null}
+                        </div>
 
-                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                          {formatRole(member.role)}
-                        </span>
-                      </div>
+                        <p className="mt-1 break-words text-sm text-white/45">
+                          {member.user.email}
+                        </p>
 
-                      <p className="mt-1 text-sm text-gray-600">
-                        {member.user.email}
-                      </p>
+                        <p className="mt-3 max-w-2xl break-words text-sm leading-6 text-white/40">
+                          {memberDescription}
+                        </p>
 
-                      <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">
-                        {getRoleDescription(member.role)}
-                      </p>
-
-                      <p className="mt-2 text-xs text-gray-400">
-                        Joined {member.createdAt.toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    {canEditThisMember ? (
-                      <div className="flex flex-col gap-3 sm:flex-row">
-                        <form action={updateMemberRole} className="flex gap-2">
-                          <input
-                            type="hidden"
-                            name="workspaceId"
-                            value={workspaceId}
-                          />
-                          <input
-                            type="hidden"
-                            name="membershipId"
-                            value={member.id}
-                          />
-
-                          <select
-                            name="role"
-                            defaultValue={member.role}
-                            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                          >
-                            <option value="MEMBER">Member</option>
-                            <option value="ADMIN">Admin</option>
-                          </select>
-
-                          <button
-                            type="submit"
-                            className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                          >
-                            Save
-                          </button>
-                        </form>
-
-                        <form action={removeMember}>
-                          <input
-                            type="hidden"
-                            name="workspaceId"
-                            value={workspaceId}
-                          />
-                          <input
-                            type="hidden"
-                            name="membershipId"
-                            value={member.id}
-                          />
-
-                          <button
-                            type="submit"
-                            className="rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-                          >
-                            Remove
-                          </button>
-                        </form>
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                        <p className="text-sm text-gray-500">
-                          {isOwner
-                            ? "Owner is protected."
-                            : isCurrentUser
-                              ? "Your own role is protected."
-                              : "View only."}
+                        <p className="mt-2 text-xs font-bold text-white/25">
+                          Joined {member.createdAt.toLocaleDateString()}
                         </p>
                       </div>
-                    )}
+
+                      {canEditThisMember ? (
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <form action={updateMemberRole} className="flex gap-2">
+                            <input
+                              type="hidden"
+                              name="workspaceId"
+                              value={workspaceId}
+                            />
+
+                            <input
+                              type="hidden"
+                              name="membershipId"
+                              value={member.id}
+                            />
+
+                            <select
+                              name="role"
+                              defaultValue={member.role}
+                              className={`${selectClass} cursor-pointer`}
+                            >
+                              <option value="MEMBER">Member</option>
+                              <option value="ADMIN">Admin</option>
+                            </select>
+
+                            <button
+                              type="submit"
+                              className={secondaryButtonClass}
+                            >
+                              Save
+                            </button>
+                          </form>
+
+                          <form action={removeMember}>
+                            <input
+                              type="hidden"
+                              name="workspaceId"
+                              value={workspaceId}
+                            />
+
+                            <input
+                              type="hidden"
+                              name="membershipId"
+                              value={member.id}
+                            />
+
+                            <button type="submit" className={dangerButtonClass}>
+                              Remove
+                            </button>
+                          </form>
+                        </div>
+                      ) : (
+                        <div className={protectedNoticeClass}>
+                          <p className="text-sm font-black text-white/75">
+                            {protectedMessage}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </section>
         </section>
       </div>
     </main>

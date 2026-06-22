@@ -6,7 +6,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   background:
-    radial-gradient(circle at top left, rgba(251, 191, 36, 0.16), transparent 34%),
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.12), transparent 34%),
     rgba(12, 12, 12, 0.94);
   padding: 14px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
@@ -20,15 +20,15 @@
   margin: 0;
   color: #fbbf24;
   font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
+  font-weight: 850;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .sidebarHeader span {
   display: block;
-  margin-top: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  margin-top: 7px;
+  color: rgba(255, 255, 255, 0.48);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -40,7 +40,7 @@
 
 .navItem,
 .navItemActive {
-  min-height: 58px;
+  min-height: 56px;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -53,26 +53,27 @@
     background 160ms ease,
     color 160ms ease,
     transform 160ms ease,
-    border-color 160ms ease;
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .navItem span,
 .navItemActive span {
   font-size: 14px;
-  font-weight: 850;
+  font-weight: 760;
   line-height: 1.1;
 }
 
 .navItem small,
 .navItemActive small {
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 560;
   line-height: 1.25;
 }
 
 .navItem {
   border: 1px solid transparent;
-  color: rgba(255, 255, 255, 0.58);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .navItem small {
@@ -87,32 +88,35 @@
 }
 
 .navItem:hover small {
-  color: rgba(255, 255, 255, 0.52);
+  color: rgba(255, 255, 255, 0.54);
 }
 
 .navItemActive {
-  color: #111111;
-  background: linear-gradient(135deg, #fde68a, #fbbf24 48%, #f97316);
-  box-shadow: 0 14px 34px rgba(251, 191, 36, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  color: #fff7cc;
+  background:
+    linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(249, 115, 22, 0.12)),
+    rgba(255, 255, 255, 0.06);
+  box-shadow: 0 14px 34px rgba(251, 191, 36, 0.1);
 }
 
 .navItemActive small {
-  color: rgba(17, 17, 17, 0.62);
+  color: rgba(255, 255, 255, 0.54);
 }
 
 .sidebarFooter {
   margin-top: 16px;
   border-radius: 18px;
-  border: 1px solid rgba(251, 191, 36, 0.12);
-  background: rgba(251, 191, 36, 0.065);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
   padding: 14px;
 }
 
 .sidebarFooter p {
   margin: 0;
-  color: #fde68a;
+  color: rgba(255, 255, 255, 0.82);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 760;
 }
 
 .sidebarFooter span {

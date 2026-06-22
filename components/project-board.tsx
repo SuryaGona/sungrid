@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
@@ -11,7 +12,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 const ISSUE_STATUSES = [
   "BACKLOG",
@@ -34,6 +35,7 @@ type BoardIssue = {
   position: number;
   reporterLabel: string;
   assigneeLabel: string;
+  sprintLabel?: string | null;
 };
 
 type ProjectBoardProps = {
@@ -51,7 +53,7 @@ function formatEnum(value: string) {
     .join(" ");
 }
 
-function BoardCard({
+const BoardCard = memo(function BoardCard({
   issue,
   workspaceId,
   projectId,
@@ -70,58 +72,77 @@ function BoardCard({
 
   const style = {
     transform: CSS.Translate.toString(transform),
+    willChange: isDragging ? "transform" : undefined,
+    transition: isDragging ? "none" : undefined,
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border border-gray-200 bg-gray-50 p-4 ${
-        isDragging ? "opacity-60" : ""
+      className={`rounded-[1.1rem] border border-white/10 bg-white/[0.045] p-4 ${
+        isDragging
+          ? "z-50 opacity-75"
+          : "hover:border-amber-300/20 hover:bg-white/[0.065]"
       }`}
     >
-      <div
+      <button
+        type="button"
         {...listeners}
         {...attributes}
-        className="mb-3 cursor-grab rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 active:cursor-grabbing"
+        className="mb-3 w-full cursor-grab rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-left text-xs font-bold text-white/50 hover:border-amber-300/25 hover:bg-amber-300/10 hover:text-amber-100 active:cursor-grabbing"
+        style={{ touchAction: "none" }}
       >
         Drag issue
-      </div>
+      </button>
 
       <Link
         href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
-        className="text-sm font-semibold text-gray-900 hover:underline"
+        className="block break-words text-sm font-black leading-5 text-white hover:text-amber-100 hover:underline"
       >
         {issue.title}
       </Link>
 
-      <p className="mt-2 line-clamp-3 text-sm text-gray-600">
+      <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-white/48">
         {issue.description || "No description provided."}
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
-        <span className="rounded-full bg-white px-2 py-1">
+      <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/50">
+        <span className="rounded-full border border-white/10 bg-black/30 px-2 py-1">
           {formatEnum(issue.type)}
         </span>
 
-        <span className="rounded-full bg-white px-2 py-1">
+        <span className="rounded-full border border-white/10 bg-black/30 px-2 py-1">
           {formatEnum(issue.priority)}
         </span>
 
-        <span className="rounded-full bg-white px-2 py-1">
+        <span className="rounded-full border border-white/10 bg-black/30 px-2 py-1">
           {issue.storyPoints ?? 0} pts
         </span>
+
+        {issue.sprintLabel ? (
+          <span className="rounded-full border border-white/10 bg-black/30 px-2 py-1">
+            {issue.sprintLabel}
+          </span>
+        ) : null}
       </div>
 
-      <div className="mt-3 text-xs text-gray-500">
-        <p>Assignee: {issue.assigneeLabel}</p>
-        <p className="mt-1">Reporter: {issue.reporterLabel}</p>
+      <div className="mt-3 space-y-1 text-xs leading-5 text-white/42">
+        <p className="break-words">
+          <span className="font-semibold text-white/55">Assignee:</span>{" "}
+          {issue.assigneeLabel}
+        </p>
+
+        <p className="break-words">
+          <span className="font-semibold text-white/55">Reporter:</span>{" "}
+          {issue.reporterLabel}
+        </p>
       </div>
     </div>
   );
-}
+});
 
-function BoardColumn({
+const BoardColumn = memo(function BoardColumn({
   status,
   issues,
   workspaceId,
@@ -139,14 +160,14 @@ function BoardColumn({
   });
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">
+    <div className="rounded-[1.45rem] border border-white/10 bg-black/25 shadow-[0_14px_36px_rgba(0,0,0,0.2)]">
+      <div className="border-b border-white/10 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-black text-white">
             {formatEnum(status)}
           </h3>
 
-          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-white/60">
             {issues.length}
           </span>
         </div>
@@ -154,13 +175,13 @@ function BoardColumn({
 
       <div
         ref={setNodeRef}
-        className={`min-h-[220px] space-y-3 p-3 ${
-          isOver ? "bg-gray-100" : ""
+        className={`min-h-[300px] space-y-3 p-3 ${
+          isOver ? "bg-amber-300/[0.07]" : ""
         }`}
       >
         {issues.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Drop issues here.</p>
+          <div className="rounded-[1.1rem] border border-dashed border-white/10 p-4">
+            <p className="text-sm text-white/35">Drop issues here.</p>
           </div>
         ) : (
           issues.map((issue) => (
@@ -176,7 +197,7 @@ function BoardColumn({
       </div>
     </div>
   );
-}
+});
 
 export function ProjectBoard({
   workspaceId,
@@ -184,9 +205,28 @@ export function ProjectBoard({
   projectArchived,
   initialIssues,
 }: ProjectBoardProps) {
+  const router = useRouter();
+  const boardScrollRef = useRef<HTMLDivElement | null>(null);
+  const pointerPositionRef = useRef<{ x: number; y: number } | null>(null);
+
   const [issues, setIssues] = useState(initialIssues);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handlePointerMove(event: PointerEvent) {
+      pointerPositionRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -215,10 +255,28 @@ export function ProjectBoard({
     );
   }, [issues]);
 
+  function isPointerInsideBoard() {
+    const pointerPosition = pointerPositionRef.current;
+    const boardElement = boardScrollRef.current;
+
+    if (!pointerPosition || !boardElement) {
+      return true;
+    }
+
+    const rect = boardElement.getBoundingClientRect();
+
+    return (
+      pointerPosition.x >= rect.left &&
+      pointerPosition.x <= rect.right &&
+      pointerPosition.y >= rect.top &&
+      pointerPosition.y <= rect.bottom
+    );
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
-    if (!over) {
+    if (!over || !isPointerInsideBoard()) {
       return;
     }
 
@@ -282,70 +340,74 @@ export function ProjectBoard({
     }
 
     setSuccessMessage("Issue moved successfully.");
+
+    router.refresh();
   }
 
-  const totalStoryPoints = issues.reduce((total, issue) => {
-    return total + (issue.storyPoints ?? 0);
-  }, 0);
-
-  const completedIssues = issues.filter((issue) => issue.status === "DONE");
-
-  const completedStoryPoints = completedIssues.reduce((total, issue) => {
-    return total + (issue.storyPoints ?? 0);
-  }, 0);
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-hidden">
+      <style jsx global>{`
+        .sungrid-board-scroll {
+          overscroll-behavior-x: contain;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(251, 191, 36, 0.72) rgba(255, 255, 255, 0.07);
+        }
+
+        .sungrid-board-scroll::-webkit-scrollbar {
+          height: 10px;
+        }
+
+        .sungrid-board-scroll::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.07);
+          border-radius: 999px;
+        }
+
+        .sungrid-board-scroll::-webkit-scrollbar-thumb {
+          background: linear-gradient(
+            90deg,
+            rgba(251, 191, 36, 0.5),
+            rgba(249, 115, 22, 0.65)
+          );
+          border-radius: 999px;
+          border: 2px solid rgba(5, 5, 5, 0.88);
+        }
+
+        .sungrid-board-scroll::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(
+            90deg,
+            rgba(251, 191, 36, 0.82),
+            rgba(249, 115, 22, 0.86)
+          );
+        }
+      `}</style>
+
       {errorMessage ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-100">
           {errorMessage}
         </div>
       ) : null}
 
       {successMessage ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">
           {successMessage}
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">Active issues</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
-            {issues.length}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">Done issues</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
-            {completedIssues.length}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">Total points</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
-            {totalStoryPoints}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">Done points</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
-            {completedStoryPoints}
-          </p>
-        </div>
-      </div>
-
       {projectArchived ? (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/50">
           This project is archived. Board movement is disabled.
         </div>
       ) : null}
 
-      <div className="overflow-x-auto pb-4">
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div
+        ref={boardScrollRef}
+        className="sungrid-board-scroll max-w-full overflow-x-auto pb-4"
+      >
+        <DndContext
+          sensors={sensors}
+          onDragEnd={handleDragEnd}
+          autoScroll={false}
+        >
           <div className="grid min-w-[1100px] grid-cols-5 gap-4">
             {ISSUE_STATUSES.map((status) => (
               <BoardColumn

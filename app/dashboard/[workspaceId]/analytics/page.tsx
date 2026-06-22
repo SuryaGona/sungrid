@@ -26,6 +26,9 @@ const ISSUE_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
 const ISSUE_TYPES = ["TASK", "BUG", "FEATURE", "STORY"] as const;
 
+const cardClass =
+  "rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]";
+
 function formatEnum(value: string) {
   return value
     .toLowerCase()
@@ -51,26 +54,6 @@ function getPercent(value: number, total: number) {
   return Math.round((value / total) * 100);
 }
 
-function getHealthLabel(completionRate: number, activeIssues: number) {
-  if (activeIssues === 0) {
-    return "No active issues";
-  }
-
-  if (completionRate >= 75) {
-    return "Strong";
-  }
-
-  if (completionRate >= 40) {
-    return "Moving";
-  }
-
-  if (completionRate > 0) {
-    return "Early";
-  }
-
-  return "Needs work";
-}
-
 function StatCard({
   label,
   value,
@@ -81,31 +64,14 @@ function StatCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
-      <p className="mt-2 text-sm text-gray-500">{helper}</p>
-    </div>
-  );
-}
+    <div className={cardClass}>
+      <p className="text-sm font-bold text-white/45">{label}</p>
 
-function ProgressBar({
-  value,
-  total,
-}: {
-  value: number;
-  total: number;
-}) {
-  const percent = getPercent(value, total);
+      <p className="mt-2 text-3xl font-black tracking-tight text-white">
+        {value}
+      </p>
 
-  return (
-    <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
-      <div
-        className="h-full rounded-full bg-black"
-        style={{
-          width: `${percent}%`,
-        }}
-      />
+      <p className="mt-2 text-sm text-white/35">{helper}</p>
     </div>
   );
 }
@@ -123,28 +89,64 @@ function DistributionCard({
   total: number;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+    <div className={cardClass}>
+      <h3 className="text-lg font-black text-white">{title}</h3>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-5 space-y-5">
         {rows.length === 0 ? (
-          <p className="text-sm text-gray-500">No active data yet.</p>
+          <p className="text-sm text-white/45">No active data yet.</p>
         ) : (
-          rows.map((row) => (
-            <div key={row.label}>
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium text-gray-700">
-                  {row.label}
-                </p>
+          rows.map((row) => {
+            const percent = getPercent(row.value, total);
+            const barWidth = percent > 0 ? Math.max(percent, 2) : 0;
 
-                <p className="text-sm text-gray-500">
-                  {row.value} · {getPercent(row.value, total)}%
-                </p>
+            return (
+              <div key={row.label}>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-bold text-white/60">
+                    {row.label}
+                  </p>
+
+                  <p className="text-sm font-black text-white">{row.value}</p>
+                </div>
+
+                <div className="mt-2 flex items-center gap-4">
+                  <svg
+                    className="block h-3 w-full"
+                    style={{
+                      flex: "1 1 auto",
+                      minWidth: 120,
+                    }}
+                    viewBox="0 0 100 10"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="0"
+                      y="0"
+                      width="100"
+                      height="10"
+                      rx="5"
+                      fill="rgba(255,255,255,0.16)"
+                    />
+
+                    <rect
+                      x="0"
+                      y="0"
+                      width={barWidth}
+                      height="10"
+                      rx="5"
+                      fill="#fde047"
+                    />
+                  </svg>
+
+                  <p className="w-12 shrink-0 text-right text-sm font-black text-amber-300">
+                    {percent}%
+                  </p>
+                </div>
               </div>
-
-              <ProgressBar value={row.value} total={total} />
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -376,14 +378,6 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
 
   const sprintReportCount = sprintReportStats._count._all;
   const averageVelocity = Math.round(sprintReportStats._avg.velocity ?? 0);
-  const averageSprintCompletion = Math.round(
-    sprintReportStats._avg.completionRate ?? 0,
-  );
-
-  const totalReportedIssues = sprintReportStats._sum.totalIssues ?? 0;
-  const totalReportedCompletedIssues =
-    sprintReportStats._sum.completedIssues ?? 0;
-
   const totalReportedVelocity = sprintReportStats._sum.velocity ?? 0;
 
   const statusRows = ISSUE_STATUSES.map((status) => ({
@@ -404,17 +398,16 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
     value: typeGroups.find((group) => group.type === type)?._count._all ?? 0,
   })).filter((row) => row.value > 0);
 
-  const healthLabel = getHealthLabel(completionRate, totalActiveIssues);
-
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
+    <main className="min-h-screen bg-[#11131a]">
+      <header className="border-b border-white/10 bg-white/[0.04]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
-            <p className="text-sm font-medium text-gray-500">SunGrid</p>
-            <h1 className="text-xl font-bold text-gray-900">
-              {workspace.name}
-            </h1>
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
+              SunGrid
+            </p>
+
+            <h1 className="text-xl font-black text-white">{workspace.name}</h1>
           </div>
 
           <UserButton />
@@ -425,26 +418,18 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
         <DashboardSidebar workspaceId={workspaceId} activePage="analytics" />
 
         <section className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+          <div className={cardClass}>
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
               Workspace intelligence
             </p>
 
-            <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Analytics
-                </h2>
+            <div className="mt-2">
+              <h2 className="text-3xl font-black text-white">Analytics</h2>
 
-                <p className="mt-2 max-w-2xl text-gray-600">
-                  Real operational metrics from members, projects, active
-                  issues, sprint reports, and activity logs.
-                </p>
-              </div>
-
-              <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
-                Health: {healthLabel}
-              </span>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
+                Real operational metrics from members, projects, active issues,
+                sprint reports, and activity logs.
+              </p>
             </div>
           </div>
 
@@ -501,8 +486,8 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
           </div>
 
           {totalArchivedIssues > 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-              <span className="font-semibold">Archived work:</span>{" "}
+            <div className="rounded-[1.5rem] border border-amber-300/20 bg-amber-300/10 p-5 text-sm leading-6 text-amber-100">
+              <span className="font-black">Archived work:</span>{" "}
               {totalArchivedIssues} archived issue
               {totalArchivedIssues === 1 ? "" : "s"} excluded from active
               completion, sprint planning, and board metrics.
@@ -529,179 +514,151 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Sprint report performance
-                </h3>
+          <section className={cardClass}>
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
+              Workspace Health
+            </p>
 
-                <p className="mt-1 text-sm text-gray-600">
-                  Delivery metrics calculated from completed sprint reports.
+            <h3 className="mt-3 text-3xl font-black tracking-tight text-white">
+              Current work
+            </h3>
+
+            <div className="mt-6 flex flex-row gap-4">
+              <div className="min-w-0 flex-1 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">
+                  Activity
+                </p>
+
+                <p className="mt-5 text-4xl font-black tracking-tight text-white">
+                  {activityLast7Days}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-3">
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <p className="text-sm text-gray-500">Avg completion</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">
-                    {averageSprintCompletion}%
-                  </p>
-                </div>
+              <div className="min-w-0 flex-1 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">
+                  Open
+                </p>
 
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <p className="text-sm text-gray-500">Reported issues</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">
-                    {totalReportedIssues}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <p className="text-sm text-gray-500">Reported done</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">
-                    {totalReportedCompletedIssues}
-                  </p>
-                </div>
+                <p className="mt-5 text-4xl font-black tracking-tight text-white">
+                  {openIssues}
+                </p>
               </div>
 
-              {latestSprintReports.length === 0 ? (
-                <div className="border-t border-gray-200 p-6">
-                  <p className="text-sm text-gray-500">
-                    No sprint reports yet. Complete a sprint to generate one.
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200 border-t border-gray-200">
-                  {latestSprintReports.map((report) => (
-                    <div key={report.id} className="p-6">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            {report.sprint.name}
-                          </p>
+              <div className="min-w-0 flex-1 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">
+                  Done
+                </p>
 
-                          <p className="mt-1 text-xs text-gray-500">
-                            {report.sprint.project.name}
-                          </p>
-                        </div>
+                <p className="mt-5 text-4xl font-black tracking-tight text-white">
+                  {completedIssues}
+                </p>
+              </div>
+            </div>
 
-                        <Link
-                          href={`/dashboard/${workspaceId}/projects/${report.sprint.projectId}/sprints`}
-                          className="text-sm font-medium text-gray-700 hover:text-gray-950"
+            {latestSprintReports.length > 0 ? (
+              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {latestSprintReports.slice(0, 2).map((report) => (
+                  <div
+                    key={report.id}
+                    className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-black text-white">
+                          {report.sprint.name}
+                        </p>
+
+                        <p className="mt-1 truncate text-sm font-bold text-white/40">
+                          {report.sprint.project.name}
+                        </p>
+                      </div>
+
+                      <Link
+                        href={`/dashboard/${workspaceId}/projects/${report.sprint.projectId}/sprints`}
+                        className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-black text-white/45 transition hover:text-white/70"
+                      >
+                        View
+                      </Link>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/40">
+                        Total {report.totalIssues}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/40">
+                        Done {report.completedIssues}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/40">
+                        Rate {report.completionRate}%
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/40">
+                        Velocity {report.velocity}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+
+          <section className={cardClass}>
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
+                Recent Activity
+              </p>
+
+              <h3 className="mt-3 text-3xl font-black tracking-tight text-white">
+                Latest updates
+              </h3>
+            </div>
+
+            {recentActivityLogs.length === 0 ? (
+              <div className="mt-6 rounded-[2rem] border border-dashed border-white/10 bg-white/[0.04] p-6">
+                <p className="text-sm text-white/45">
+                  No activity recorded yet.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {recentActivityLogs.slice(0, 4).map((log) => (
+                  <div
+                    key={log.id}
+                    className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-base font-black text-white">
+                          {formatAction(log.action)}
+                        </p>
+
+                        <p
+                          className="mt-2 text-sm font-bold leading-6 text-white/35"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
                         >
-                          View sprint →
-                        </Link>
+                          {log.description || "Workspace activity recorded."}
+                        </p>
                       </div>
 
-                      <p className="mt-3 text-sm leading-6 text-gray-600">
-                        {report.generatedSummary ||
-                          "Report generated for this completed sprint."}
+                      <p className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-white/30">
+                        {log.createdAt.toLocaleDateString([], {
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </p>
-
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          Total: {report.totalIssues}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          Done: {report.completedIssues}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          Rate: {report.completionRate}%
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          Velocity: {report.velocity}
-                        </span>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Recent activity
-                </h3>
-
-                <p className="mt-1 text-sm text-gray-600">
-                  Latest workspace events across projects, issues, and sprints.
-                </p>
+                  </div>
+                ))}
               </div>
-
-              {recentActivityLogs.length === 0 ? (
-                <div className="p-6">
-                  <p className="text-sm text-gray-500">
-                    No activity has been recorded yet.
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {recentActivityLogs.map((log) => (
-                    <div key={log.id} className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            {formatAction(log.action)}
-                          </p>
-
-                          <p className="mt-1 text-sm leading-6 text-gray-600">
-                            {log.description || "Workspace activity recorded."}
-                          </p>
-                        </div>
-
-                        <span className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                          {log.createdAt.toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
-                        {log.user ? (
-                          <span className="rounded-full bg-gray-100 px-2 py-1">
-                            {log.user.name || log.user.email || "User"}
-                          </span>
-                        ) : null}
-
-                        {log.project ? (
-                          <span className="rounded-full bg-gray-100 px-2 py-1">
-                            {log.project.name}
-                          </span>
-                        ) : null}
-
-                        {log.issue ? (
-                          <span className="rounded-full bg-gray-100 px-2 py-1">
-                            {log.issue.title}
-                          </span>
-                        ) : null}
-
-                        {log.sprint ? (
-                          <span className="rounded-full bg-gray-100 px-2 py-1">
-                            {log.sprint.name}
-                          </span>
-                        ) : null}
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {log.createdAt.toLocaleTimeString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="border-t border-gray-200 p-6">
-                <p className="text-sm text-gray-500">
-                  Total activity logs:{" "}
-                  <span className="font-semibold text-gray-900">
-                    {totalActivityLogs}
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
+            )}
+          </section>
         </section>
       </div>
     </main>

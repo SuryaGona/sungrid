@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -8,6 +7,7 @@ import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { logActivity } from "@/lib/activity";
 import { prisma } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/workspace-auth";
+import layoutStyles from "../../workspace-dashboard.module.css";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -129,6 +129,15 @@ function getCompletionRate(totalIssues: number, completedIssues: number) {
 
   return Math.round((completedIssues / totalIssues) * 100);
 }
+
+const badgeClass =
+  "rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/55";
+
+const actionButtonClass =
+  "rounded-full border px-5 py-2 text-sm font-bold transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]";
+
+const createButtonClass =
+  "w-fit rounded-full bg-gradient-to-r from-amber-200 via-amber-400 to-orange-500 px-6 py-3 text-sm font-black text-black shadow-[0_14px_34px_rgba(251,191,36,0.16)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(251,191,36,0.24)] active:translate-y-0 active:scale-[0.98]";
 
 async function createIssue(formData: FormData) {
   "use server";
@@ -429,6 +438,205 @@ async function restoreIssue(formData: FormData) {
   redirect(projectPageUrl(workspaceId, projectId, { success: "issue-restored" }));
 }
 
+function CreateIssueForm({
+  workspaceId,
+  projectId,
+  workspaceMembers,
+  compact = false,
+}: {
+  workspaceId: string;
+  projectId: string;
+  workspaceMembers: Array<{
+    user: {
+      id: string;
+      name: string | null;
+      email: string;
+    };
+  }>;
+  compact?: boolean;
+}) {
+  const fieldClass =
+    "mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-amber-300/60";
+
+  const selectClass =
+    "mt-2 w-full cursor-pointer rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-amber-300/60";
+
+  const optionClass = "bg-[#050505] text-white";
+
+  return (
+    <form action={createIssue} className="grid gap-4">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <input type="hidden" name="projectId" value={projectId} />
+
+      <div>
+        <label
+          htmlFor={compact ? "compact-title" : "title"}
+          className="block text-sm font-bold text-white/70"
+        >
+          Issue title
+        </label>
+
+        <input
+          id={compact ? "compact-title" : "title"}
+          name="title"
+          type="text"
+          required
+          maxLength={120}
+          placeholder="Example: Build dashboard analytics"
+          className={fieldClass}
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor={compact ? "compact-description" : "description"}
+          className="block text-sm font-bold text-white/70"
+        >
+          Description
+        </label>
+
+        <textarea
+          id={compact ? "compact-description" : "description"}
+          name="description"
+          rows={compact ? 2 : 3}
+          maxLength={1000}
+          placeholder="Add implementation notes, context, or acceptance criteria."
+          className={`${fieldClass} resize-none`}
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-5">
+        <div>
+          <label
+            htmlFor={compact ? "compact-status" : "status"}
+            className="block text-sm font-bold text-white/70"
+          >
+            Status
+          </label>
+
+          <select
+            id={compact ? "compact-status" : "status"}
+            name="status"
+            defaultValue="BACKLOG"
+            className={selectClass}
+            style={{ colorScheme: "dark" }}
+          >
+            {ISSUE_STATUSES.map((status) => (
+              <option key={status} value={status} className={optionClass}>
+                {formatEnum(status)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor={compact ? "compact-priority" : "priority"}
+            className="block text-sm font-bold text-white/70"
+          >
+            Priority
+          </label>
+
+          <select
+            id={compact ? "compact-priority" : "priority"}
+            name="priority"
+            defaultValue="MEDIUM"
+            className={selectClass}
+            style={{ colorScheme: "dark" }}
+          >
+            {ISSUE_PRIORITIES.map((priority) => (
+              <option key={priority} value={priority} className={optionClass}>
+                {formatEnum(priority)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor={compact ? "compact-type" : "type"}
+            className="block text-sm font-bold text-white/70"
+          >
+            Type
+          </label>
+
+          <select
+            id={compact ? "compact-type" : "type"}
+            name="type"
+            defaultValue="TASK"
+            className={selectClass}
+            style={{ colorScheme: "dark" }}
+          >
+            {ISSUE_TYPES.map((type) => (
+              <option key={type} value={type} className={optionClass}>
+                {formatEnum(type)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor={compact ? "compact-storyPoints" : "storyPoints"}
+            className="block text-sm font-bold text-white/70"
+          >
+            Points
+          </label>
+
+          <input
+            id={compact ? "compact-storyPoints" : "storyPoints"}
+            name="storyPoints"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="3"
+            className={fieldClass}
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor={compact ? "compact-assigneeId" : "assigneeId"}
+            className="block text-sm font-bold text-white/70"
+          >
+            Assignee
+          </label>
+
+          <select
+            id={compact ? "compact-assigneeId" : "assigneeId"}
+            name="assigneeId"
+            defaultValue=""
+            className={selectClass}
+            style={{ colorScheme: "dark" }}
+          >
+            <option value="" className={optionClass}>
+              Unassigned
+            </option>
+
+            {workspaceMembers.map((member) => (
+              <option
+                key={member.user.id}
+                value={member.user.id}
+                className={optionClass}
+              >
+                {member.user.name || member.user.email}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        className={createButtonClass}
+        style={{ cursor: "pointer" }}
+      >
+        Create issue
+      </button>
+    </form>
+  );
+}
+
 export default async function ProjectDetailPage({
   params,
   searchParams,
@@ -548,124 +756,118 @@ export default async function ProjectDetailPage({
   const completedSprints =
     sprintStats.find((item) => item.status === "COMPLETED")?._count._all ?? 0;
 
+  const totalSprints = plannedSprints + activeSprints + completedSprints;
+
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">SunGrid</p>
-            <h1 className="text-xl font-bold text-gray-900">
-              {workspace.name}
-            </h1>
-          </div>
+    <main className={layoutStyles.page}>
+      <div className={layoutStyles.backgroundGlowOne} />
+      <div className={layoutStyles.backgroundGlowTwo} />
 
-          <UserButton  />
-        </div>
-      </header>
-
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
+      <div className={layoutStyles.shell}>
         <DashboardSidebar workspaceId={workspaceId} activePage="projects" />
 
-        <section className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className={layoutStyles.content}>
+          <header className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
             <Link
               href={`/dashboard/${workspaceId}/projects`}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+              className="inline-flex w-fit rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-white/55 transition hover:-translate-y-0.5 hover:bg-white/5 hover:text-white active:translate-y-0 active:scale-[0.98]"
             >
               ← Back to projects
             </Link>
 
-            <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="mt-6 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">
-                  Project workspace
+                <p className="text-sm font-black uppercase tracking-[0.28em] text-amber-300">
+                  Project
                 </p>
 
-                <h2 className="mt-2 text-3xl font-bold text-gray-900">
+                <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-5xl">
                   {project.name}
-                </h2>
+                </h1>
 
-                <p className="mt-2 max-w-2xl text-gray-600">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/50">
                   {project.description ||
                     "Manage issues, board flow, sprint planning, and delivery history for this project."}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {project.archived ? (
-                  <span className="rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-black text-white/55">
                     Archived project
                   </span>
                 ) : (
-                  <span className="rounded-full bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-black text-emerald-200">
                     Active project
                   </span>
                 )}
               </div>
             </div>
-          </div>
+          </header>
 
           {errorMessage ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="rounded-2xl border border-red-400/20 bg-red-400/10 px-5 py-4 text-sm font-bold text-red-100">
               {errorMessage}
             </div>
           ) : null}
 
           {successMessage ? (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-4 text-sm font-bold text-emerald-100">
               {successMessage}
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Active issues</p>
-              <p className="mt-2 text-2xl font-bold text-gray-900">
+          <section className="grid gap-4 md:grid-cols-4">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <p className="text-sm font-bold text-white/45">Active issues</p>
+              <strong className="mt-3 block text-3xl font-black tracking-tight text-white">
                 {activeIssues.length}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
+              </strong>
+              <span className="mt-2 block text-sm text-white/35">
                 {openIssues} open · {completedIssues} done
-              </p>
+              </span>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Completion</p>
-              <p className="mt-2 text-2xl font-bold text-gray-900">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <p className="text-sm font-bold text-white/45">Completion</p>
+              <strong className="mt-3 block text-3xl font-black tracking-tight text-white">
                 {completionRate}%
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
+              </strong>
+              <span className="mt-2 block text-sm text-white/35">
                 Active issues only
-              </p>
+              </span>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Sprints</p>
-              <p className="mt-2 text-2xl font-bold text-gray-900">
-                {plannedSprints + activeSprints + completedSprints}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <p className="text-sm font-bold text-white/45">Sprints</p>
+              <strong className="mt-3 block text-3xl font-black tracking-tight text-white">
+                {totalSprints}
+              </strong>
+              <span className="mt-2 block text-sm text-white/35">
                 {activeSprints} active · {completedSprints} done
-              </p>
+              </span>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Archived issues</p>
-              <p className="mt-2 text-2xl font-bold text-gray-900">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <p className="text-sm font-bold text-white/45">
+                Archived issues
+              </p>
+              <strong className="mt-3 block text-3xl font-black tracking-tight text-white">
                 {archivedIssues.length}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Hidden from board/sprints
-              </p>
+              </strong>
+              <span className="mt-2 block text-sm text-white/35">
+                Hidden from active work
+              </span>
             </div>
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <section className="grid gap-4 md:grid-cols-3">
             <Link
               href={`/dashboard/${workspaceId}/projects/${projectId}/board`}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-3xl border border-white/10 bg-black/30 p-5 transition hover:-translate-y-0.5 hover:border-amber-300/25 hover:bg-white/[0.05] active:translate-y-0 active:scale-[0.99]"
             >
-              <p className="text-sm font-semibold text-gray-900">Open board</p>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="text-lg font-black text-white">Open board</p>
+              <p className="mt-2 text-sm leading-6 text-white/45">
                 Move active issues through Backlog, Todo, Progress, Review, and
                 Done.
               </p>
@@ -673,386 +875,279 @@ export default async function ProjectDetailPage({
 
             <Link
               href={`/dashboard/${workspaceId}/projects/${projectId}/sprints`}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-3xl border border-white/10 bg-black/30 p-5 transition hover:-translate-y-0.5 hover:border-amber-300/25 hover:bg-white/[0.05] active:translate-y-0 active:scale-[0.99]"
             >
-              <p className="text-sm font-semibold text-gray-900">
-                Sprint planning
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="text-lg font-black text-white">Sprint planning</p>
+              <p className="mt-2 text-sm leading-6 text-white/45">
                 Plan cycles, assign issues, complete sprints, and view reports.
               </p>
             </Link>
 
             <Link
               href={`/dashboard/${workspaceId}/analytics`}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-3xl border border-white/10 bg-black/30 p-5 transition hover:-translate-y-0.5 hover:border-amber-300/25 hover:bg-white/[0.05] active:translate-y-0 active:scale-[0.99]"
             >
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-lg font-black text-white">
                 Workspace analytics
               </p>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm leading-6 text-white/45">
                 Review completion, sprint performance, and activity metrics.
               </p>
             </Link>
-          </div>
+          </section>
 
-          {!project.archived ? (
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Create issue
-              </h3>
-
-              <p className="mt-1 text-sm text-gray-600">
-                Add a task, bug, feature, or story to this project.
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">
+                Active issues
               </p>
 
-              <form action={createIssue} className="mt-5 space-y-4">
-                <input type="hidden" name="workspaceId" value={workspaceId} />
-                <input type="hidden" name="projectId" value={projectId} />
+              <h2 className="mt-2 text-2xl font-black">
+                {activeIssues.length} active
+              </h2>
 
-                <div>
-                  <label
-                    htmlFor="title"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Issue title
-                  </label>
-
-                  <input
-                    id="title"
-                    name="title"
-                    type="text"
-                    required
-                    maxLength={120}
-                    placeholder="Build dashboard analytics"
-                    className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Description
-                  </label>
-
-                  <textarea
-                    id="description"
-                    name="description"
-                    rows={3}
-                    maxLength={1000}
-                    placeholder="Add implementation notes, context, or acceptance criteria."
-                    className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-                  <div>
-                    <label
-                      htmlFor="status"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Status
-                    </label>
-
-                    <select
-                      id="status"
-                      name="status"
-                      defaultValue="BACKLOG"
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                    >
-                      {ISSUE_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {formatEnum(status)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="priority"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Priority
-                    </label>
-
-                    <select
-                      id="priority"
-                      name="priority"
-                      defaultValue="MEDIUM"
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                    >
-                      {ISSUE_PRIORITIES.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {formatEnum(priority)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="type"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Type
-                    </label>
-
-                    <select
-                      id="type"
-                      name="type"
-                      defaultValue="TASK"
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                    >
-                      {ISSUE_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {formatEnum(type)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="storyPoints"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Points
-                    </label>
-
-                    <input
-                      id="storyPoints"
-                      name="storyPoints"
-                      type="number"
-                      min={0}
-                      max={100}
-                      placeholder="3"
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="assigneeId"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Assignee
-                    </label>
-
-                    <select
-                      id="assigneeId"
-                      name="assigneeId"
-                      defaultValue=""
-                      className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-black"
-                    >
-                      <option value="">Unassigned</option>
-
-                      {workspaceMembers.map((member) => (
-                        <option key={member.user.id} value={member.user.id}>
-                          {member.user.name || member.user.email}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white"
-                >
-                  Create issue
-                </button>
-              </form>
-            </div>
-          ) : null}
-
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Active issues
-              </h3>
-
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
                 Active issues appear on the board, sprint planning, and
                 analytics.
               </p>
             </div>
 
             {activeIssues.length === 0 ? (
-              <div className="p-6">
-                <p className="text-sm text-gray-500">
-                  No active issues yet. Create an issue to start project work.
-                </p>
+              <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/10 bg-black/25 p-6">
+                <div className="max-w-2xl">
+                  <h3 className="text-xl font-black text-white">
+                    No active issues yet
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-white/45">
+                    Create your first issue to start tracking project work.
+                  </p>
+                </div>
+
+                {!project.archived ? (
+                  <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                    <CreateIssueForm
+                      workspaceId={workspaceId}
+                      projectId={projectId}
+                      workspaceMembers={workspaceMembers}
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-5 text-sm text-white/45">
+                    Archived projects cannot receive new issues.
+                  </p>
+                )}
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="mt-6 grid gap-4">
                 {activeIssues.map((issue) => (
-                  <div
+                  <article
                     key={issue.id}
-                    className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:justify-between"
+                    className="rounded-3xl border border-white/10 bg-black/30 p-5"
                   >
-                    <div>
-                      <Link
-                        href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
-                        className="text-sm font-semibold text-gray-900 hover:text-gray-600"
-                      >
-                        {issue.title}
-                      </Link>
-
-                      <p className="mt-1 max-w-2xl text-sm text-gray-600">
-                        {issue.description || "No description provided."}
-                      </p>
-
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {formatEnum(issue.status)}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {formatEnum(issue.priority)}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {formatEnum(issue.type)}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {issue.storyPoints ?? 0} pts
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {issue.assignee?.name ||
-                            issue.assignee?.email ||
-                            "Unassigned"}
-                        </span>
-
-                        {issue.sprint ? (
-                          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
-                            {issue.sprint.name}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {canManageIssues && !project.archived ? (
-                      <form action={archiveIssue}>
-                        <input
-                          type="hidden"
-                          name="workspaceId"
-                          value={workspaceId}
-                        />
-                        <input
-                          type="hidden"
-                          name="projectId"
-                          value={projectId}
-                        />
-                        <input type="hidden" name="issueId" value={issue.id} />
-
-                        <button
-                          type="submit"
-                          className="rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
+                          className="text-lg font-black text-white transition hover:text-amber-200"
                         >
-                          Archive
-                        </button>
-                      </form>
-                    ) : null}
-                  </div>
+                          {issue.title}
+                        </Link>
+
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+                          {issue.description || "No description provided."}
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+                          <span className={badgeClass}>
+                            {formatEnum(issue.status)}
+                          </span>
+
+                          <span className={badgeClass}>
+                            {formatEnum(issue.priority)}
+                          </span>
+
+                          <span className={badgeClass}>
+                            {formatEnum(issue.type)}
+                          </span>
+
+                          <span className={badgeClass}>
+                            {issue.storyPoints ?? 0} pts
+                          </span>
+
+                          <span className={badgeClass}>
+                            {issue.assignee?.name ||
+                              issue.assignee?.email ||
+                              "Unassigned"}
+                          </span>
+
+                          {issue.sprint ? (
+                            <span className={badgeClass}>
+                              {issue.sprint.name}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      {canManageIssues && !project.archived ? (
+                        <form action={archiveIssue}>
+                          <input
+                            type="hidden"
+                            name="workspaceId"
+                            value={workspaceId}
+                          />
+
+                          <input
+                            type="hidden"
+                            name="projectId"
+                            value={projectId}
+                          />
+
+                          <input
+                            type="hidden"
+                            name="issueId"
+                            value={issue.id}
+                          />
+
+                          <button
+                            type="submit"
+                            style={{ cursor: "pointer" }}
+                            className={`${actionButtonClass} border-red-400/20 text-red-200 hover:bg-red-400/10 hover:shadow-[0_14px_34px_rgba(248,113,113,0.12)]`}
+                          >
+                            Archive
+                          </button>
+                        </form>
+                      ) : null}
+                    </div>
+                  </article>
                 ))}
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+          {!project.archived && activeIssues.length > 0 ? (
+            <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+              <div className="mb-5">
+                <p className="text-sm font-black uppercase tracking-[0.25em] text-white/35">
+                  New issue
+                </p>
+
+                <h2 className="mt-2 text-2xl font-black">Create issue</h2>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
+                  Add another task, bug, feature, or story to this project.
+                </p>
+              </div>
+
+              <CreateIssueForm
+                workspaceId={workspaceId}
+                projectId={projectId}
+                workspaceMembers={workspaceMembers}
+                compact
+              />
+            </section>
+          ) : null}
+
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-white/35">
                 Archived issues
-              </h3>
+              </p>
 
-              <p className="mt-1 text-sm text-gray-600">
-                Archived issues stay in the database for history, but they are
-                hidden from active board and sprint planning.
+              <h2 className="mt-2 text-2xl font-black">
+                {archivedIssues.length} archived
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
+                Archived issues stay available for history, but they are hidden
+                from active board and sprint planning.
               </p>
             </div>
 
             {archivedIssues.length === 0 ? (
-              <div className="p-6">
-                <p className="text-sm text-gray-500">
-                  No archived issues in this project.
-                </p>
+              <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-black/25 p-6 text-sm text-white/45">
+                No archived issues in this project.
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="mt-6 grid gap-4">
                 {archivedIssues.map((issue) => (
-                  <div
+                  <article
                     key={issue.id}
-                    className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:justify-between"
+                    className="rounded-3xl border border-white/10 bg-black/30 p-5 opacity-75"
                   >
-                    <div>
-                      <Link
-                        href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
-                        className="text-sm font-semibold text-gray-900 hover:text-gray-600"
-                      >
-                        {issue.title}
-                      </Link>
-
-                      <p className="mt-1 max-w-2xl text-sm text-gray-600">
-                        {issue.description || "No description provided."}
-                      </p>
-
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {formatEnum(issue.status)}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {formatEnum(issue.priority)}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {formatEnum(issue.type)}
-                        </span>
-
-                        <span className="rounded-full bg-gray-100 px-2 py-1">
-                          {issue.storyPoints ?? 0} pts
-                        </span>
-
-                        {issue.sprint ? (
-                          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
-                            Was in {issue.sprint.name}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {canManageIssues && !project.archived ? (
-                      <form action={restoreIssue}>
-                        <input
-                          type="hidden"
-                          name="workspaceId"
-                          value={workspaceId}
-                        />
-                        <input
-                          type="hidden"
-                          name="projectId"
-                          value={projectId}
-                        />
-                        <input type="hidden" name="issueId" value={issue.id} />
-
-                        <button
-                          type="submit"
-                          className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
+                          className="text-lg font-black text-white transition hover:text-amber-200"
                         >
-                          Restore
-                        </button>
-                      </form>
-                    ) : null}
-                  </div>
+                          {issue.title}
+                        </Link>
+
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+                          {issue.description || "No description provided."}
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+                          <span className={badgeClass}>
+                            {formatEnum(issue.status)}
+                          </span>
+
+                          <span className={badgeClass}>
+                            {formatEnum(issue.priority)}
+                          </span>
+
+                          <span className={badgeClass}>
+                            {formatEnum(issue.type)}
+                          </span>
+
+                          <span className={badgeClass}>
+                            {issue.storyPoints ?? 0} pts
+                          </span>
+
+                          {issue.sprint ? (
+                            <span className={badgeClass}>
+                              Was in {issue.sprint.name}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      {canManageIssues && !project.archived ? (
+                        <form action={restoreIssue}>
+                          <input
+                            type="hidden"
+                            name="workspaceId"
+                            value={workspaceId}
+                          />
+
+                          <input
+                            type="hidden"
+                            name="projectId"
+                            value={projectId}
+                          />
+
+                          <input
+                            type="hidden"
+                            name="issueId"
+                            value={issue.id}
+                          />
+
+                          <button
+                            type="submit"
+                            style={{ cursor: "pointer" }}
+                            className={`${actionButtonClass} border-emerald-400/20 text-emerald-200 hover:bg-emerald-400/10 hover:shadow-[0_14px_34px_rgba(52,211,153,0.12)]`}
+                          >
+                            Restore
+                          </button>
+                        </form>
+                      ) : null}
+                    </div>
+                  </article>
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </section>
       </div>
     </main>

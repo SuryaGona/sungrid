@@ -29,32 +29,72 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+function formatActivityAction(action: string) {
+  return action
+    .split(".")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function SunLogo() {
   return (
     <div className={styles.logoWrap} aria-hidden="true">
-      <svg viewBox="0 0 80 80" className={styles.logo}>
+      <svg viewBox="0 0 80 80" className={styles.logo} role="img">
         <defs>
           <linearGradient
             id="workspaceSunGradient"
-            x1="16"
-            y1="10"
-            x2="66"
-            y2="70"
+            x1="18"
+            y1="12"
+            x2="64"
+            y2="68"
           >
             <stop offset="0%" stopColor="#FFF7AD" />
             <stop offset="45%" stopColor="#FDBA33" />
             <stop offset="100%" stopColor="#F97316" />
           </linearGradient>
+
+          <filter
+            id="workspaceSunGlow"
+            x="-60%"
+            y="-60%"
+            width="220%"
+            height="220%"
+          >
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 1  0 0.65 0 0 0.55  0 0 0.1 0 0  0 0 0 0.75 0"
+            />
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        <circle
+          cx="40"
+          cy="40"
+          r="22"
+          fill="url(#workspaceSunGradient)"
+          filter="url(#workspaceSunGlow)"
+        />
+
         <path
-          d="M40 7V17M40 63V73M7 40H17M63 40H73M16.5 16.5L23.5 23.5M56.5 56.5L63.5 63.5M63.5 16.5L56.5 23.5M23.5 56.5L16.5 63.5"
+          d="M40 8V18M40 62V72M8 40H18M62 40H72M17.4 17.4L24.5 24.5M55.5 55.5L62.6 62.6M62.6 17.4L55.5 24.5M24.5 55.5L17.4 62.6"
           stroke="#FDE68A"
           strokeWidth="4"
           strokeLinecap="round"
         />
 
-        <circle cx="40" cy="40" r="22" fill="url(#workspaceSunGradient)" />
+        <path
+          d="M29 35H51M29 45H51M35 29V51M45 29V51"
+          stroke="#111827"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          opacity="0.75"
+        />
       </svg>
     </div>
   );
@@ -70,7 +110,7 @@ function DashboardUnavailable() {
         <div className={styles.heroCard}>
           <div>
             <p className={styles.kicker}>Connection issue</p>
-            <h2>Dashboard could not load.</h2>
+            <h2>Dashboard could not load</h2>
             <p className={styles.heroText}>
               SunGrid could not reach the workspace database right now. Your
               data is still safe. Try again in a moment.
@@ -208,12 +248,16 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     recentActivity,
   } = data;
 
-  const roleLabel = formatRole(membership.role);
+  const isGuestWorkspace = Boolean(user.isGuest || workspace.isGuest);
+  const roleLabel = isGuestWorkspace ? "Guest" : formatRole(membership.role);
+
+  const displayName = isGuestWorkspace
+    ? "Guest"
+    : user.name?.split(" ")[0] || user.email.split("@")[0] || "there";
+
+  const openIssueCount = Math.max(issueCount - completedIssueCount, 0);
   const completionRate =
     issueCount === 0 ? 0 : Math.round((completedIssueCount / issueCount) * 100);
-
-  const firstName =
-    user.name?.split(" ")[0] || user.email.split("@")[0] || "there";
 
   return (
     <main className={styles.page}>
@@ -232,14 +276,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </div>
 
           <div className={styles.headerActions}>
-            <Link
-              href={`/dashboard/${workspaceId}/projects`}
-              className={styles.headerButton}
-            >
-              Projects
-            </Link>
-
-            <UserButton  />
+            <UserButton />
           </div>
         </div>
       </header>
@@ -252,12 +289,21 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
             <div>
               <p className={styles.kicker}>Dashboard overview</p>
 
-              <h2>Welcome back, {firstName}.</h2>
+              <h2>Welcome, {displayName}</h2>
 
               <p className={styles.heroText}>
-                Manage workspace projects, issues, members, and activity from
-                one focused command center.
+                Track projects, issues, sprints, and recent activity from one
+                focused place.
               </p>
+
+              {isGuestWorkspace ? (
+                <div className={styles.note}>
+                  <strong>Sample workspace:</strong>{" "}
+                  This guest workspace includes sample projects, issues,
+                  sprints, and activity so you can explore SunGrid without
+                  setting up an account.
+                </div>
+              ) : null}
             </div>
 
             <div className={styles.roleCard}>
@@ -295,7 +341,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <div className={styles.panelHeader}>
                 <div>
                   <p className={styles.kicker}>Workspace health</p>
-                  <h3>Core SaaS system active</h3>
+                  <h3>Current work</h3>
                 </div>
 
                 <span className={styles.statusPill}>Live</span>
@@ -303,25 +349,24 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
               <div className={styles.healthGrid}>
                 <div>
-                  <p>Activity logs</p>
+                  <p>Activity</p>
                   <strong>{activityCount}</strong>
                 </div>
 
                 <div>
                   <p>Open issues</p>
-                  <strong>{Math.max(issueCount - completedIssueCount, 0)}</strong>
+                  <strong>{openIssueCount}</strong>
                 </div>
 
                 <div>
-                  <p>Plan</p>
-                  <strong>Free</strong>
+                  <p>Completed</p>
+                  <strong>{completedIssueCount}</strong>
                 </div>
               </div>
 
               <div className={styles.note}>
-                Workspace data is scoped by membership. Server-side guards
-                protect access before loading projects, issues, members, and
-                activity.
+                Recent project, issue, and sprint updates are tracked here so
+                your team can stay aligned.
               </div>
             </div>
 
@@ -329,7 +374,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <div className={styles.panelHeader}>
                 <div>
                   <p className={styles.kicker}>Recent activity</p>
-                  <h3>Audit trail</h3>
+                  <h3>Latest updates</h3>
                 </div>
 
                 <Link
@@ -345,7 +390,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   recentActivity.map((activity) => (
                     <div key={activity.id} className={styles.activityItem}>
                       <div>
-                        <p>{activity.action}</p>
+                        <p>{formatActivityAction(activity.action)}</p>
                         <span>{activity.description}</span>
                       </div>
 
@@ -355,7 +400,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 ) : (
                   <div className={styles.emptyState}>
                     <p>No activity yet.</p>
-                    <span>Project and issue actions will appear here.</span>
+                    <span>Project and issue updates will appear here.</span>
                   </div>
                 )}
               </div>
