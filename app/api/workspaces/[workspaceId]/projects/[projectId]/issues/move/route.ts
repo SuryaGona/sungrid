@@ -107,18 +107,6 @@ async function getGuestWorkspaceFallback(workspaceId: string) {
           },
         },
         include: {
-          user: {
-            include: {
-              memberships: {
-                where: {
-                  workspaceId,
-                },
-                include: {
-                  workspace: true,
-                },
-              },
-            },
-          },
           workspace: true,
         },
         take: 1,
@@ -148,22 +136,22 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
 
   const userWithMembership = await getRequestUserWithMembership(workspaceId);
 
-  let user = userWithMembership;
+  let actorUserId = userWithMembership?.id;
   let membership = userWithMembership?.memberships[0];
   let workspace = membership?.workspace;
 
-  if (!user || !membership || !workspace) {
+  if (!actorUserId || !membership || !workspace) {
     const guestWorkspace = await getGuestWorkspaceFallback(workspaceId);
     const guestMembership = guestWorkspace?.memberships[0];
 
     if (guestWorkspace && guestMembership) {
-      user = guestMembership.user;
+      actorUserId = guestMembership.userId;
       membership = guestMembership;
       workspace = guestWorkspace;
     }
   }
 
-  if (!user || !membership || !workspace) {
+  if (!actorUserId || !membership || !workspace) {
     return NextResponse.json(
       {
         error: "Forbidden",
@@ -252,7 +240,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
 
   await logActivity({
     workspaceId,
-    userId: user.id,
+    userId: actorUserId,
     projectId,
     issueId: issue.id,
     action: "issue.moved",
