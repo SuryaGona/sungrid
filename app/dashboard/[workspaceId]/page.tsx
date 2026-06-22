@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { prisma } from "@/lib/db";
@@ -273,10 +272,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <p>SunGrid</p>
               <h1>{workspace.name}</h1>
             </div>
-          </div>
-
-          <div className={styles.headerActions}>
-            <UserButton />
           </div>
         </div>
       </header>
