@@ -107,7 +107,18 @@ async function getGuestWorkspaceFallback(workspaceId: string) {
           },
         },
         include: {
-          user: true,
+          user: {
+            include: {
+              memberships: {
+                where: {
+                  workspaceId,
+                },
+                include: {
+                  workspace: true,
+                },
+              },
+            },
+          },
           workspace: true,
         },
         take: 1,
@@ -129,7 +140,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
       },
       {
         status: 400,
-      }
+      },
     );
   }
 
@@ -159,7 +170,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
       },
       {
         status: 403,
-      }
+      },
     );
   }
 
@@ -174,7 +185,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
       },
       {
         status: 403,
-      }
+      },
     );
   }
 
@@ -197,7 +208,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
       },
       {
         status: 404,
-      }
+      },
     );
   }
 
@@ -208,7 +219,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
       },
       {
         status: 400,
-      }
+      },
     );
   }
 
@@ -246,7 +257,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
     issueId: issue.id,
     action: "issue.moved",
     description: `Moved issue "${issue.title}" from ${formatEnum(
-      oldStatus
+      oldStatus,
     )} to ${formatEnum(status)}.`,
     metadata: {
       issueId: issue.id,
@@ -261,7 +272,7 @@ export async function PATCH(request: Request, { params }: MoveIssueRouteProps) {
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}/board`);
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}`);
   revalidatePath(
-    `/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`
+    `/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`,
   );
   revalidatePath(`/dashboard/${workspaceId}/activity`);
   revalidatePath(`/dashboard/${workspaceId}/analytics`);
