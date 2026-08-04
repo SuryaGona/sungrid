@@ -1,5 +1,6 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 
@@ -72,8 +73,15 @@ export async function DashboardSidebar({
   activePage,
   isGuestWorkspace,
 }: DashboardSidebarProps) {
+  const resolvedWorkspaceId = workspaceId?.trim();
+
+  if (!resolvedWorkspaceId) {
+    redirect("/dashboard");
+  }
+
   const resolvedIsGuestWorkspace =
-    isGuestWorkspace ?? (await getIsGuestWorkspace(workspaceId));
+    isGuestWorkspace ??
+    (await getIsGuestWorkspace(resolvedWorkspaceId));
 
   return (
     <aside
@@ -138,7 +146,7 @@ export async function DashboardSidebar({
         aria-label="Dashboard navigation"
       >
         {navItems.map((item) => {
-          const href = `/dashboard/${workspaceId}${item.href}`;
+          const href = `/dashboard/${resolvedWorkspaceId}${item.href}`;
           const isActive = activePage === item.value;
 
           return (

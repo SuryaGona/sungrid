@@ -1,11 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { prisma } from "@/lib/db";
-import {
-  requireWorkspaceAccess,
-  WorkspaceDatabaseError,
-} from "@/lib/workspace-auth";
+import { requireWorkspaceAccess } from "@/lib/workspace-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -214,8 +212,6 @@ function DashboardUnavailable() {
 }
 
 async function getDashboardData(workspaceId: string) {
-  const context = await requireWorkspaceAccess(workspaceId);
-
   const [
     memberCount,
     activityCount,
@@ -283,7 +279,6 @@ async function getDashboardData(workspaceId: string) {
   ]);
 
   return {
-    ...context,
     memberCount,
     activityCount,
     projectCount,
@@ -296,25 +291,25 @@ async function getDashboardData(workspaceId: string) {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { workspaceId } = await params;
+  const resolvedWorkspaceId = workspaceId?.trim();
 
-  let data: Awaited<ReturnType<typeof getDashboardData>>;
+  if (!resolvedWorkspaceId) {
+    redirect("/dashboard");
+  }
+
+  const context = await requireWorkspaceAccess(resolvedWorkspaceId);
+
+  let dashboardData: Awaited<ReturnType<typeof getDashboardData>>;
 
   try {
-    data = await getDashboardData(workspaceId);
+    dashboardData = await getDashboardData(resolvedWorkspaceId);
   } catch (error) {
     console.error("Workspace dashboard load failed:", error);
-
-    if (error instanceof WorkspaceDatabaseError) {
-      return <DashboardUnavailable />;
-    }
-
     return <DashboardUnavailable />;
   }
 
+  const { user, membership, workspace } = context;
   const {
-    user,
-    membership,
-    workspace,
     memberCount,
     activityCount,
     projectCount,
@@ -322,7 +317,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     issueCount,
     completedIssueCount,
     recentActivity,
-  } = data;
+  } = dashboardData;
 
   const isGuestWorkspace = Boolean(user.isGuest || workspace.isGuest);
   const roleLabel = isGuestWorkspace ? "Guest" : formatRole(membership.role);
@@ -405,7 +400,10 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           max-[560px]:w-[min(100%,calc(100vw-28px))]
         "
       >
-        <DashboardSidebar workspaceId={workspaceId} activePage="overview" />
+        <DashboardSidebar
+          workspaceId={resolvedWorkspaceId}
+          activePage="overview"
+        />
 
         <section className="grid w-full min-w-0 max-w-full gap-4">
           <section
@@ -696,7 +694,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 </div>
 
                 <Link
-                  href={`/dashboard/${workspaceId}/activity`}
+                  href={`/dashboard/${resolvedWorkspaceId}/activity`}
                   className="
                     inline-flex min-h-[42px] items-center rounded-full
                     border border-white/[0.08] px-4 text-[13px]

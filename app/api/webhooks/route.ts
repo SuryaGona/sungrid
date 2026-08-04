@@ -22,11 +22,13 @@ type ClerkUserEvent = {
 };
 
 function getPrimaryEmail(data: ClerkUserEvent["data"]) {
-  const primaryEmail = data.email_addresses?.find(
-    (email) => email.id === data.primary_email_address_id,
-  )?.email_address;
-
-  return primaryEmail || data.email_addresses?.[0]?.email_address || null;
+  return (
+    data.email_addresses?.find(
+      (email) => email.id === data.primary_email_address_id,
+    )?.email_address ??
+    data.email_addresses?.[0]?.email_address ??
+    null
+  );
 }
 
 function getFullName(data: ClerkUserEvent["data"]) {
@@ -34,28 +36,62 @@ function getFullName(data: ClerkUserEvent["data"]) {
 }
 
 async function syncUser(data: ClerkUserEvent["data"]) {
-  const primaryEmail = getPrimaryEmail(data);
+  const email = getPrimaryEmail(data);
 
-  if (!primaryEmail) {
+  if (!email) {
     return new Response("Missing user email", { status: 400 });
   }
 
-  await prisma.user.upsert({
-    where: {
-      clerkId: data.id,
+  const name = getFullName(data);
+  const imageUrl = data.image_url ?? null;
+
+  await prisma.$transaction(
+    async (tx) => {
+      const existingUser = await tx.user.findFirst({
+        where: {
+          OR: [
+            {
+              clerkId: data.id,
+            },
+            {
+              email,
+            },
+          ],
+        },
+      });
+
+      if (existingUser) {
+        await tx.user.update({
+          where: {
+            id: existingUser.id,
+          },
+          data: {
+            clerkId: data.id,
+            email,
+            name,
+            imageUrl,
+            isGuest: false,
+          },
+        });
+
+        return;
+      }
+
+      await tx.user.create({
+        data: {
+          clerkId: data.id,
+          email,
+          name,
+          imageUrl,
+          isGuest: false,
+        },
+      });
     },
-    update: {
-      email: primaryEmail,
-      name: getFullName(data),
-      imageUrl: data.image_url ?? null,
+    {
+      maxWait: 10_000,
+      timeout: 20_000,
     },
-    create: {
-      clerkId: data.id,
-      email: primaryEmail,
-      name: getFullName(data),
-      imageUrl: data.image_url ?? null,
-    },
-  });
+  );
 
   return new Response("User synced", { status: 200 });
 }
@@ -88,42 +124,36 @@ async function deleteUserData(clerkId: string) {
     return new Response("User already deleted", { status: 200 });
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const membership of user.memberships) {
-      const workspace = membership.workspace;
-      const workspaceMembers = workspace.memberships;
-      const otherMembers = workspaceMembers.filter(
-        (member) => member.userId !== user.id,
-      );
-
-      const isOnlyMember = otherMembers.length === 0;
-
-      if (isOnlyMember) {
-        await tx.workspace.delete({
-          where: {
-            id: workspace.id,
-          },
-        });
-
-        continue;
-      }
-
-      if (membership.role === "OWNER") {
-        const existingOtherOwner = otherMembers.find(
-          (member) => member.role === "OWNER",
+  await prisma.$transaction(
+    async (tx) => {
+      for (const membership of user.memberships) {
+        const otherMembers = membership.workspace.memberships.filter(
+          (member) => member.userId !== user.id,
         );
 
-        if (!existingOtherOwner) {
-          const adminToPromote = otherMembers.find(
-            (member) => member.role === "ADMIN",
+        if (otherMembers.length === 0) {
+          await tx.workspace.delete({
+            where: {
+              id: membership.workspaceId,
+            },
+          });
+
+          continue;
+        }
+
+        if (membership.role === "OWNER") {
+          const otherOwner = otherMembers.find(
+            (member) => member.role === "OWNER",
           );
 
-          const memberToPromote = adminToPromote || otherMembers[0];
+          if (!otherOwner) {
+            const replacementOwner =
+              otherMembers.find((member) => member.role === "ADMIN") ??
+              otherMembers[0];
 
-          if (memberToPromote) {
             await tx.membership.update({
               where: {
-                id: memberToPromote.id,
+                id: replacementOwner.id,
               },
               data: {
                 role: "OWNER",
@@ -131,42 +161,43 @@ async function deleteUserData(clerkId: string) {
             });
           }
         }
+
+        await tx.membership.delete({
+          where: {
+            id: membership.id,
+          },
+        });
       }
 
-      await tx.membership.deleteMany({
+      await tx.user.delete({
         where: {
-          id: membership.id,
+          id: user.id,
         },
       });
-    }
+    },
+    {
+      maxWait: 10_000,
+      timeout: 20_000,
+    },
+  );
 
-    await tx.user.deleteMany({
-      where: {
-        id: user.id,
-      },
-    });
-  });
-
-  return new Response("User deleted and workspace data cleaned", {
-    status: 200,
-  });
+  return new Response("User deleted", { status: 200 });
 }
 
 export async function POST(req: Request) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    return new Response("Missing CLERK_WEBHOOK_SECRET", { status: 500 });
+    return new Response("Missing webhook secret", { status: 500 });
   }
 
   const headerPayload = await headers();
-
   const svixId = headerPayload.get("svix-id");
   const svixTimestamp = headerPayload.get("svix-timestamp");
   const svixSignature = headerPayload.get("svix-signature");
 
   if (!svixId || !svixTimestamp || !svixSignature) {
-    return new Response("Missing Svix headers", { status: 400 });
+    return new Response("Missing webhook headers", { status: 400 });
   }
 
   const payload = await req.text();
@@ -181,8 +212,8 @@ export async function POST(req: Request) {
       "svix-signature": svixSignature,
     }) as ClerkUserEvent;
   } catch (error) {
-    console.error("Invalid Clerk webhook signature:", error);
-    return new Response("Invalid webhook signature", { status: 400 });
+    console.error("Invalid Clerk webhook:", error);
+    return new Response("Invalid webhook", { status: 400 });
   }
 
   try {
@@ -194,9 +225,9 @@ export async function POST(req: Request) {
       return await deleteUserData(event.data.id);
     }
 
-    return new Response("Unhandled event", { status: 200 });
+    return new Response("Event ignored", { status: 200 });
   } catch (error) {
     console.error("Clerk webhook failed:", error);
-    return new Response("Webhook handler failed", { status: 500 });
+    return new Response("Webhook failed", { status: 500 });
   }
 }

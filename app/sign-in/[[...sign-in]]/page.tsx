@@ -1,166 +1,309 @@
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 
-const pageClass = `
-  relative grid min-h-screen place-items-center overflow-hidden bg-[#050505] px-5 py-10 text-white
-  bg-[radial-gradient(circle_at_50%_-10%,rgba(201,162,74,0.12),transparent_34%),radial-gradient(circle_at_100%_100%,rgba(111,78,30,0.1),transparent_28%),#050505]
-  before:pointer-events-none before:fixed before:inset-0 before:content-['']
-  before:bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)]
-  before:bg-[size:58px_58px]
-  before:[mask-image:radial-gradient(circle_at_center,black,transparent_78%)]
-`;
-
-const shellClass =
-  "relative z-[1] grid w-full max-w-[980px] grid-cols-[minmax(0,0.82fr)_minmax(360px,430px)] items-center gap-6 max-[900px]:max-w-[520px] max-[900px]:grid-cols-1";
-
-const brandCardClass =
-  "rounded-[1.35rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.24)]";
-
-const clerkWrapClass =
-  "rounded-[1.35rem] border border-white/10 bg-white/[0.04] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.24)]";
-
-const iconWrapClass =
-  "grid h-14 w-14 place-items-center rounded-[1.1rem] border border-[#d6bf76]/20 bg-[#d6bf76]/[0.1] shadow-[0_14px_36px_rgba(0,0,0,0.18)]";
-
 const clerkAppearance = {
   variables: {
-    colorPrimary: "#d6bf76",
-    colorBackground: "#ffffff",
-    colorText: "#111827",
-    colorTextSecondary: "#6b7280",
-    colorInputBackground: "#ffffff",
-    colorInputText: "#111827",
-    colorDanger: "#dc2626",
-    borderRadius: "18px",
+    colorPrimary: "#d8c274",
+    colorBackground: "#1b1b19",
+    colorText: "#f7f7f5",
+    colorTextSecondary: "#a6a7a3",
+    colorInputBackground: "#292b2d",
+    colorInputText: "#f8f8f6",
+    colorDanger: "#f08080",
+    borderRadius: "14px",
   },
   elements: {
     rootBox: {
       width: "100%",
-      display: "flex",
-      justifyContent: "center",
     },
     cardBox: {
       width: "100%",
-      maxWidth: "430px",
-      borderRadius: "24px",
-      boxShadow: "0 18px 48px rgba(0, 0, 0, 0.24)",
+      maxWidth: "390px",
+      boxShadow: "none",
     },
     card: {
+      width: "100%",
+      padding: "28px",
       borderRadius: "24px",
-      border: "1px solid rgba(255, 255, 255, 0.14)",
+      border: "1px solid rgba(255,255,255,0.1)",
+      background:
+        "linear-gradient(145deg, rgba(31,31,28,0.99), rgba(23,23,21,0.99))",
+      boxShadow:
+        "0 30px 90px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.055)",
+      backdropFilter: "blur(20px)",
+    },
+    header: {
+      gap: "8px",
     },
     headerTitle: {
-      fontSize: "26px",
-      fontWeight: "900",
+      fontSize: "24px",
+      fontWeight: "650",
       letterSpacing: "-0.04em",
-      color: "#111827",
+      color: "#f7f7f5",
     },
     headerSubtitle: {
-      color: "#6b7280",
+      fontSize: "13px",
+      color: "#a6a7a3",
+    },
+    socialButtonsBlockButton: {
+      position: "relative",
+      height: "46px",
+      marginTop: "8px",
+      borderRadius: "13px",
+      border: "1px solid rgba(255,255,255,0.13)",
+      background: "#303235",
+      color: "#f4f4f1",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045)",
+    },
+    socialButtonsBlockButtonText: {
+      fontSize: "13px",
+      fontWeight: "600",
+      color: "#f4f4f1",
+    },
+    socialButtonsProviderIcon: {
+      filter: "none",
+    },
+    lastAuthenticationStrategyBadge: {
+      top: "-11px",
+      right: "10px",
+      zIndex: "5",
+      padding: "4px 9px",
+      borderRadius: "999px",
+      border: "1px solid rgba(216,194,116,0.34)",
+      background: "#d8c274",
+      color: "#1d1c17",
+      fontSize: "10px",
+      fontWeight: "750",
+      lineHeight: "1",
+      boxShadow: "0 6px 18px rgba(0,0,0,0.32)",
+    },
+    dividerLine: {
+      background: "rgba(255,255,255,0.1)",
+    },
+    dividerText: {
+      fontSize: "11px",
+      color: "#858681",
+    },
+    formFieldLabel: {
+      fontSize: "12px",
+      fontWeight: "550",
+      color: "#c4c4bf",
+    },
+    formFieldInput: {
+      height: "44px",
+      borderRadius: "13px",
+      border: "1px solid rgba(255,255,255,0.12)",
+      background: "#292b2d",
+      color: "#f8f8f6",
+      boxShadow:
+        "inset 0 1px 0 rgba(255,255,255,0.035), 0 0 0 1px transparent",
+    },
+    formFieldInputShowPasswordButton: {
+      color: "#a8aaa6",
     },
     formButtonPrimary: {
-      background: "linear-gradient(135deg, #fff7ad, #d6bf76 48%, #f97316)",
-      color: "#111111",
-      fontWeight: "900",
-      boxShadow: "0 14px 34px rgba(214, 191, 118, 0.24)",
+      height: "44px",
+      borderRadius: "13px",
+      border: "1px solid rgba(255,255,255,0.08)",
+      background: "#d8c274",
+      color: "#1c1b16",
+      fontSize: "13px",
+      fontWeight: "700",
+      boxShadow: "0 12px 30px rgba(216,194,116,0.15)",
+    },
+    footer: {
+      background: "transparent",
+    },
+    footerActionText: {
+      fontSize: "12px",
+      color: "#92938f",
     },
     footerActionLink: {
-      color: "#b8872f",
-      fontWeight: "800",
+      fontSize: "12px",
+      fontWeight: "650",
+      color: "#e3cf85",
+    },
+    identityPreview: {
+      borderRadius: "13px",
+      border: "1px solid rgba(255,255,255,0.12)",
+      background: "#292b2d",
+    },
+    identityPreviewText: {
+      color: "#ededeb",
     },
     identityPreviewEditButton: {
-      color: "#b8872f",
+      color: "#e3cf85",
+    },
+    formFieldAction: {
+      color: "#e3cf85",
+    },
+    alert: {
+      borderRadius: "13px",
+      border: "1px solid rgba(240,128,128,0.22)",
+      background: "rgba(116,48,48,0.3)",
+      color: "#ffd5d5",
+    },
+    alternativeMethodsBlockButton: {
+      borderRadius: "13px",
+      border: "1px solid rgba(255,255,255,0.12)",
+      background: "#303235",
+      color: "#f4f4f1",
+    },
+    alternativeMethodsBlockButtonText: {
+      color: "#f4f4f1",
     },
   },
 };
 
-function BackgroundGlows() {
+function Logo() {
   return (
-    <>
-      <div className="pointer-events-none fixed left-[42%] top-[-220px] h-[520px] w-[520px] rounded-full bg-[rgba(201,162,74,0.1)] blur-[90px]" />
-      <div className="pointer-events-none fixed bottom-[-220px] right-[-220px] h-[520px] w-[520px] rounded-full bg-[rgba(111,78,30,0.1)] blur-[90px]" />
-    </>
-  );
-}
-
-function SunGridLogo() {
-  return (
-    <div className={iconWrapClass} aria-hidden="true">
-      <svg viewBox="0 0 80 80" className="h-9 w-9">
+    <div
+      className="
+        grid h-11 w-11 shrink-0 place-items-center rounded-[16px]
+        border border-[#d6bf76]/25
+        bg-[linear-gradient(145deg,rgba(201,162,74,0.14),rgba(111,78,30,0.06))]
+        shadow-[0_0_32px_rgba(201,162,74,0.12),inset_0_1px_0_rgba(255,255,255,0.08)]
+      "
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 80 80" className="h-8 w-8" fill="none">
         <defs>
           <linearGradient
-            id="sunGridSignInGradient"
-            x1="16"
-            y1="10"
-            x2="66"
-            y2="70"
+            id="signInLogoGradient"
+            x1="18"
+            y1="12"
+            x2="64"
+            y2="68"
           >
-            <stop offset="0%" stopColor="#fff7ad" />
-            <stop offset="45%" stopColor="#d6bf76" />
-            <stop offset="100%" stopColor="#f97316" />
+            <stop offset="0%" stopColor="#F4E7B0" />
+            <stop offset="45%" stopColor="#C8A14A" />
+            <stop offset="100%" stopColor="#6F4E1E" />
           </linearGradient>
+
+          <filter
+            id="signInLogoGlow"
+            x="-60%"
+            y="-60%"
+            width="220%"
+            height="220%"
+          >
+            <feGaussianBlur stdDeviation="4" result="blur" />
+
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="0.9 0 0 0 0.75 0 0.65 0 0 0.45 0 0 0.25 0 0.12 0 0 0 0.5 0"
+            />
+
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        <circle
+          cx="40"
+          cy="40"
+          r="21"
+          fill="url(#signInLogoGradient)"
+          filter="url(#signInLogoGlow)"
+        />
+
         <path
-          d="M40 7V17M40 63V73M7 40H17M63 40H73M16.5 16.5L23.5 23.5M56.5 56.5L63.5 63.5M63.5 16.5L56.5 23.5M23.5 56.5L16.5 63.5"
-          stroke="#f4e7b0"
+          d="M40 8V18M40 62V72M8 40H18M62 40H72M17.4 17.4L24.5 24.5M55.5 55.5L62.6 62.6M62.6 17.4L55.5 24.5M24.5 55.5L17.4 62.6"
+          stroke="#D6BF76"
           strokeWidth="4"
           strokeLinecap="round"
         />
 
-        <circle cx="40" cy="40" r="22" fill="url(#sunGridSignInGradient)" />
-
         <path
           d="M29 35H51M29 45H51M35 29V51M45 29V51"
-          stroke="#111827"
-          strokeWidth="2.7"
+          stroke="#17140B"
+          strokeWidth="2.6"
           strokeLinecap="round"
-          opacity="0.72"
+          opacity="0.8"
         />
       </svg>
     </div>
   );
 }
 
+function BackIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      className="h-4 w-4"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M16 10H5M9 6l-4 4 4 4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function SignInPage() {
   return (
-    <main className={pageClass}>
-      <BackgroundGlows />
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-[#101112] px-5 py-10 text-white">
+      <Link
+        href="/"
+        className="
+          absolute left-5 top-5 z-30 inline-flex items-center gap-2
+          rounded-xl border border-white/[0.1]
+          bg-[#25272a] px-3.5 py-2.5
+          text-xs font-medium text-white/65 no-underline
+          shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
+          transition hover:border-white/[0.17]
+          hover:bg-[#2e3033] hover:text-white
+          sm:left-8 sm:top-7
+        "
+      >
+        <BackIcon />
+        Back
+      </Link>
+
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute left-1/2 top-[-430px] h-[760px] w-[760px] -translate-x-1/2 rounded-full bg-[#8c7429]/12 blur-[145px]" />
+
+        <div className="absolute bottom-[-300px] right-[-260px] h-[580px] w-[580px] rounded-full bg-[#4b4e51]/10 blur-[150px]" />
+
+        <div className="absolute inset-0 opacity-[0.025] [background-image:url('data:image/svg+xml,%3Csvg viewBox=%220 0 180 180%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.7%22/%3E%3C/svg%3E')]" />
+      </div>
 
       <Link
         href="/"
-        className="absolute left-5 top-5 z-[2] inline-flex h-8 items-center rounded-full border border-white/10 bg-black/25 px-3 text-xs font-bold text-white/55 no-underline transition hover:-translate-y-px hover:bg-white/5 hover:text-white active:translate-y-0 active:scale-[0.98]"
+        className="
+          absolute left-1/2 top-5 z-20 flex -translate-x-1/2
+          items-center gap-3 text-white no-underline sm:top-7
+        "
       >
-        ← Back to SunGrid
+        <Logo />
+
+        <div className="hidden sm:block">
+          <p className="m-0 text-[12px] font-extrabold leading-none tracking-[-0.02em] text-[#d6bf76]">
+            SunGrid
+          </p>
+
+          <p className="m-0 mt-1.5 whitespace-nowrap text-[15px] font-black leading-none tracking-[-0.04em] text-white">
+            Team Workspace
+          </p>
+        </div>
       </Link>
 
-      <section className={shellClass}>
-        <div className={brandCardClass}>
-          <SunGridLogo />
-
-          <p className="m-0 mt-4 text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#d6bf76]">
-            Workspace access
-          </p>
-
-          <h1 className="m-0 mt-2 text-[34px] font-extrabold tracking-[-0.05em] text-white md:text-[42px]">
-            SunGrid
-          </h1>
-
-          <p className="m-0 mt-2 max-w-md text-sm leading-6 text-white/45">
-            Sign in to continue to your workspace, projects, boards, sprints,
-            reports, and team activity.
-          </p>
-        </div>
-
-        <div className={clerkWrapClass}>
-          <SignIn
-            path="/sign-in"
-            routing="path"
-            signUpUrl="/sign-up"
-            fallbackRedirectUrl="/dashboard"
-            appearance={clerkAppearance}
-          />
-        </div>
+      <section className="relative z-10 w-full max-w-[390px] pt-20 sm:pt-16">
+        <SignIn
+          path="/sign-in"
+          routing="path"
+          signUpUrl="/sign-up"
+          fallbackRedirectUrl="/dashboard"
+          appearance={clerkAppearance}
+        />
       </section>
     </main>
   );
