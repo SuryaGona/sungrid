@@ -8,17 +8,17 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
-
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:status": "docker compose ps",
     "db:logs": "docker compose logs -f",
-
     "db:dev:push": "cross-env DATABASE_URL=postgresql://sungrid:sungrid_local@localhost:5433/sungrid_dev prisma db push",
     "db:test:push": "cross-env DATABASE_URL=postgresql://sungrid:sungrid_test@localhost:5434/sungrid_test prisma db push",
-
     "db:reset": "docker compose down -v && docker compose up -d"
   },
   "dependencies": {
@@ -49,10 +49,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.11",
     "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
