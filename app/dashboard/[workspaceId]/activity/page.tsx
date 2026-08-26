@@ -35,9 +35,6 @@ const contentClass = "grid w-full min-w-0 max-w-full gap-3 overflow-hidden";
 const heroCardClass =
   "rounded-[1.35rem] border border-white/10 bg-white/[0.04] px-4 py-3.5 shadow-[0_18px_48px_rgba(0,0,0,0.2)]";
 
-const cardClass =
-  "rounded-[1.35rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.2)]";
-
 const sectionHeaderClass =
   "rounded-[1.2rem] border border-white/[0.08] bg-white/[0.025] px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]";
 
@@ -325,8 +322,8 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
 
             {activityLogs.length === 0 ? (
               <div className="rounded-[1.2rem] border border-dashed border-white/10 bg-black/25 p-4 text-sm text-white/45 shadow-[0_14px_36px_rgba(0,0,0,0.14)]">
-                No activity yet. Create projects, issues, sprints, or reports
-                to start building the audit trail.
+                No activity yet. Create projects, issues, sprints, or reports to
+                start building the audit trail.
               </div>
             ) : (
               <div className="grid gap-3">

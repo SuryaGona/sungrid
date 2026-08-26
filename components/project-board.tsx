@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
-  DragStartEvent,
   PointerSensor,
   useDraggable,
   useDroppable,
@@ -13,7 +12,14 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const ISSUE_STATUSES = [
   "BACKLOG",
@@ -45,6 +51,18 @@ type ProjectBoardProps = {
   projectArchived: boolean;
   initialIssues: BoardIssue[];
 };
+
+function subscribeToClientMount() {
+  return () => {};
+}
+
+function getClientSnapshot() {
+  return true;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 function formatEnum(value: string) {
   return value
@@ -207,19 +225,21 @@ export function ProjectBoard({
   initialIssues,
 }: ProjectBoardProps) {
   const router = useRouter();
+
+  const mounted = useSyncExternalStore(
+    subscribeToClientMount,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
+
   const boardScrollRef = useRef<HTMLDivElement | null>(null);
   const pointerPositionRef = useRef<{ x: number; y: number } | null>(null);
   const autoScrollFrameRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
 
-  const [mounted, setMounted] = useState(false);
   const [issues, setIssues] = useState(initialIssues);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   function stopAutoScroll() {
     isDraggingRef.current = false;
@@ -271,7 +291,10 @@ export function ProjectBoard({
       if (pointerPosition.x >= rect.right - edgeSize) {
         const intensity = Math.min(
           1,
-          Math.max(0, (pointerPosition.x - (rect.right - edgeSize)) / edgeSize),
+          Math.max(
+            0,
+            (pointerPosition.x - (rect.right - edgeSize)) / edgeSize,
+          ),
         );
 
         scrollAmount = Math.ceil(maxSpeed * intensity);
@@ -292,7 +315,7 @@ export function ProjectBoard({
     autoScrollFrameRef.current = requestAnimationFrame(runAutoScroll);
   }
 
-  function handleDragStart(event: DragStartEvent) {
+  function handleDragStart() {
     if (projectArchived) {
       return;
     }
@@ -446,7 +469,8 @@ export function ProjectBoard({
         .sungrid-board-scroll {
           overscroll-behavior-x: contain;
           scrollbar-width: thin;
-          scrollbar-color: rgba(251, 191, 36, 0.72) rgba(255, 255, 255, 0.07);
+          scrollbar-color: rgba(251, 191, 36, 0.72)
+            rgba(255, 255, 255, 0.07);
         }
 
         .sungrid-board-scroll::-webkit-scrollbar {

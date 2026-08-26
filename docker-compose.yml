@@ -1,0 +1,38 @@
+services:
+  postgres-dev:
+    image: postgres:16-alpine
+    container_name: sungrid-postgres-dev
+    environment:
+      POSTGRES_USER: sungrid
+      POSTGRES_PASSWORD: sungrid_local
+      POSTGRES_DB: sungrid_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - sungrid_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sungrid -d sungrid_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: sungrid-postgres-test
+    environment:
+      POSTGRES_USER: sungrid
+      POSTGRES_PASSWORD: sungrid_test
+      POSTGRES_DB: sungrid_test
+    ports:
+      - "5434:5432"
+    volumes:
+      - sungrid_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sungrid -d sungrid_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sungrid_dev_data:
+  sungrid_test_data:
