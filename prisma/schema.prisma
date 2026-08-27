@@ -95,7 +95,7 @@ model Membership {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, workspaceId])
-  @@index([workspaceId])
+  @@index([workspaceId, createdAt])
   @@index([userId])
 }
 
@@ -113,7 +113,8 @@ model Project {
   sprints      Sprint[]
   activityLogs ActivityLog[]
 
-  @@index([workspaceId])
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, archived])
 }
 
 model Issue {
@@ -146,13 +147,13 @@ model Issue {
   comments     Comment[]
   activityLogs ActivityLog[]
 
-  @@index([workspaceId])
+  @@index([workspaceId, archived, status])
+  @@index([workspaceId, projectId, archived, sprintId, createdAt])
+  @@index([workspaceId, projectId, archived, updatedAt])
   @@index([projectId])
-  @@index([sprintId])
+  @@index([sprintId, archived, createdAt])
   @@index([reporterId])
   @@index([assigneeId])
-  @@index([archived])
-  @@index([status])
 }
 
 model Comment {
@@ -169,7 +170,7 @@ model Comment {
   author    User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([workspaceId])
-  @@index([issueId])
+  @@index([issueId, createdAt])
   @@index([authorId])
 }
 
@@ -195,9 +196,9 @@ model Sprint {
   sprintReport SprintReport?
   activityLogs ActivityLog[]
 
-  @@index([workspaceId])
+  @@index([workspaceId, projectId, createdAt])
   @@index([projectId])
-  @@index([status])
+  @@index([workspaceId, status])
 }
 
 model SprintReport {
@@ -216,7 +217,7 @@ model SprintReport {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   sprint    Sprint    @relation(fields: [sprintId], references: [id], onDelete: Cascade)
 
-  @@index([workspaceId])
+  @@index([workspaceId, createdAt])
 }
 
 model Invite {
@@ -256,10 +257,9 @@ model ActivityLog {
   issue     Issue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
   sprint    Sprint?   @relation(fields: [sprintId], references: [id], onDelete: SetNull)
 
-  @@index([workspaceId])
+  @@index([workspaceId, createdAt])
   @@index([userId])
   @@index([projectId])
   @@index([issueId])
   @@index([sprintId])
-  @@index([createdAt])
 }

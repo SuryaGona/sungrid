@@ -10,6 +10,8 @@ type ActivityMetadataValue =
 
 type ActivityMetadata = Record<string, ActivityMetadataValue>;
 
+type ActivityClient = Pick<typeof prisma, "activityLog">;
+
 export type LogActivityInput = {
   workspaceId: string;
   userId?: string | null;
@@ -21,17 +23,20 @@ export type LogActivityInput = {
   metadata?: ActivityMetadata;
 };
 
-export async function logActivity({
-  workspaceId,
-  userId,
-  projectId,
-  issueId,
-  sprintId,
-  action,
-  description,
-  metadata,
-}: LogActivityInput) {
-  await prisma.activityLog.create({
+export async function logActivity(
+  {
+    workspaceId,
+    userId,
+    projectId,
+    issueId,
+    sprintId,
+    action,
+    description,
+    metadata,
+  }: LogActivityInput,
+  client: ActivityClient = prisma,
+) {
+  await client.activityLog.create({
     data: {
       workspaceId,
       userId: userId ?? null,

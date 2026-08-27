@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   requireWorkspaceAccess: vi.fn(),
   requireWorkspaceRole: vi.fn(),
 
+  transaction: vi.fn(),
+
   projectFindMany: vi.fn(),
   projectFindFirst: vi.fn(),
   projectCreate: vi.fn(),
@@ -23,6 +25,7 @@ vi.mock("@/lib/workspace-auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   prisma: {
+    $transaction: mocks.transaction,
     project: {
       findMany: mocks.projectFindMany,
       findFirst: mocks.projectFindFirst,
@@ -225,6 +228,8 @@ describe("project archive and restore lifecycle", () => {
     mocks.requireWorkspaceAccess.mockReset();
     mocks.requireWorkspaceRole.mockReset();
 
+    mocks.transaction.mockReset();
+
     mocks.projectFindMany.mockReset();
     mocks.projectFindFirst.mockReset();
     mocks.projectCreate.mockReset();
@@ -238,6 +243,30 @@ describe("project archive and restore lifecycle", () => {
     mocks.redirect.mockImplementation((path: string) => {
       throw new Error(`REDIRECT:${path}`);
     });
+
+    mocks.transaction.mockImplementation(
+      async (
+        callback: (tx: {
+          project: {
+            findMany: typeof mocks.projectFindMany;
+            findFirst: typeof mocks.projectFindFirst;
+            create: typeof mocks.projectCreate;
+            updateMany: typeof mocks.projectUpdateMany;
+            delete: typeof mocks.projectDelete;
+          };
+        }) => Promise<unknown>,
+      ) => {
+        return callback({
+          project: {
+            findMany: mocks.projectFindMany,
+            findFirst: mocks.projectFindFirst,
+            create: mocks.projectCreate,
+            updateMany: mocks.projectUpdateMany,
+            delete: mocks.projectDelete,
+          },
+        });
+      },
+    );
 
     mocks.projectFindMany.mockResolvedValue([
       createProject({
@@ -332,6 +361,7 @@ describe("project archive and restore lifecycle", () => {
     );
 
     expect(mocks.projectFindFirst).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.projectUpdateMany).not.toHaveBeenCalled();
     expect(mocks.projectDelete).not.toHaveBeenCalled();
   });
@@ -367,6 +397,7 @@ describe("project archive and restore lifecycle", () => {
       },
     });
 
+    expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.projectUpdateMany).not.toHaveBeenCalled();
     expect(mocks.projectDelete).not.toHaveBeenCalled();
   });
@@ -398,10 +429,13 @@ describe("project archive and restore lifecycle", () => {
       "REDIRECT:/dashboard/workspace-a/projects?success=project-archived",
     );
 
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+
     expect(mocks.projectUpdateMany).toHaveBeenCalledWith({
       where: {
         id: "active-project",
         workspaceId: "workspace-a",
+        archived: false,
       },
       data: {
         archived: true,
@@ -410,17 +444,22 @@ describe("project archive and restore lifecycle", () => {
 
     expect(mocks.projectDelete).not.toHaveBeenCalled();
 
-    expect(mocks.logActivity).toHaveBeenCalledWith({
-      workspaceId: "workspace-a",
-      userId: "user-1",
-      projectId: "active-project",
-      action: "project.archived",
-      description: 'Archived project "Active Project".',
-      metadata: {
+    expect(mocks.logActivity).toHaveBeenCalledWith(
+      {
+        workspaceId: "workspace-a",
+        userId: "user-1",
         projectId: "active-project",
-        projectName: "Active Project",
+        action: "project.archived",
+        description: 'Archived project "Active Project".',
+        metadata: {
+          projectId: "active-project",
+          projectName: "Active Project",
+        },
       },
-    });
+      expect.objectContaining({
+        project: expect.any(Object),
+      }),
+    );
   });
 
   it("does not rewrite or relog a project that is already archived", async () => {
@@ -446,6 +485,7 @@ describe("project archive and restore lifecycle", () => {
       "REDIRECT:/dashboard/workspace-a/projects?success=project-archived",
     );
 
+    expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.projectUpdateMany).not.toHaveBeenCalled();
     expect(mocks.projectDelete).not.toHaveBeenCalled();
     expect(mocks.logActivity).not.toHaveBeenCalled();
@@ -483,10 +523,13 @@ describe("project archive and restore lifecycle", () => {
       ["OWNER", "ADMIN"],
     );
 
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+
     expect(mocks.projectUpdateMany).toHaveBeenCalledWith({
       where: {
         id: "archived-project",
         workspaceId: "workspace-a",
+        archived: true,
       },
       data: {
         archived: false,
@@ -495,17 +538,22 @@ describe("project archive and restore lifecycle", () => {
 
     expect(mocks.projectDelete).not.toHaveBeenCalled();
 
-    expect(mocks.logActivity).toHaveBeenCalledWith({
-      workspaceId: "workspace-a",
-      userId: "user-1",
-      projectId: "archived-project",
-      action: "project.restored",
-      description: 'Restored project "Archived Project".',
-      metadata: {
+    expect(mocks.logActivity).toHaveBeenCalledWith(
+      {
+        workspaceId: "workspace-a",
+        userId: "user-1",
         projectId: "archived-project",
-        projectName: "Archived Project",
+        action: "project.restored",
+        description: 'Restored project "Archived Project".',
+        metadata: {
+          projectId: "archived-project",
+          projectName: "Archived Project",
+        },
       },
-    });
+      expect.objectContaining({
+        project: expect.any(Object),
+      }),
+    );
   });
 
   it("refuses to restore a project from another workspace", async () => {
@@ -539,6 +587,7 @@ describe("project archive and restore lifecycle", () => {
       },
     });
 
+    expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.projectUpdateMany).not.toHaveBeenCalled();
     expect(mocks.projectDelete).not.toHaveBeenCalled();
   });
@@ -566,6 +615,7 @@ describe("project archive and restore lifecycle", () => {
       "REDIRECT:/dashboard/workspace-a/projects?success=project-restored",
     );
 
+    expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.projectUpdateMany).not.toHaveBeenCalled();
     expect(mocks.projectDelete).not.toHaveBeenCalled();
     expect(mocks.logActivity).not.toHaveBeenCalled();

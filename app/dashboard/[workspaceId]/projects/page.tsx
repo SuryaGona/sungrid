@@ -301,33 +301,34 @@ async function createProject(formData: FormData) {
 
   const { user } = await requireWorkspaceRole(workspaceId, ["OWNER", "ADMIN"]);
 
-  let projectId: string | null = null;
-
   try {
-    const project = await prisma.project.create({
-      data: {
-        workspaceId,
-        name,
-        description: description || null,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      const project = await tx.project.create({
+        data: {
+          workspaceId,
+          name,
+          description: description || null,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
 
-    projectId = project.id;
-
-    await logActivity({
-      workspaceId,
-      userId: user.id,
-      projectId: project.id,
-      action: "project.created",
-      description: `Created project "${project.name}".`,
-      metadata: {
-        projectId: project.id,
-        projectName: project.name,
-      },
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId: project.id,
+          action: "project.created",
+          description: `Created project "${project.name}".`,
+          metadata: {
+            projectId: project.id,
+            projectName: project.name,
+          },
+        },
+        tx,
+      );
     });
   } catch (error) {
     logError("Create project failed", error, {
@@ -342,10 +343,6 @@ async function createProject(formData: FormData) {
   revalidatePath(`/dashboard/${workspaceId}/projects`);
   revalidatePath(`/dashboard/${workspaceId}/activity`);
   revalidatePath(`/dashboard/${workspaceId}/analytics`);
-
-  if (!projectId) {
-    redirect(projectsPageUrl(workspaceId, { error: "database" }));
-  }
 
   redirect(projectsPageUrl(workspaceId, { success: "project-created" }));
 }
@@ -383,27 +380,47 @@ async function archiveProject(formData: FormData) {
   }
 
   if (!project.archived) {
-    await prisma.project.updateMany({
-      where: {
-        id: project.id,
-        workspaceId,
-      },
-      data: {
-        archived: true,
-      },
-    });
+    try {
+      await prisma.$transaction(async (tx) => {
+        const result = await tx.project.updateMany({
+          where: {
+            id: project.id,
+            workspaceId,
+            archived: false,
+          },
+          data: {
+            archived: true,
+          },
+        });
 
-    await logActivity({
-      workspaceId,
-      userId: user.id,
-      projectId: project.id,
-      action: "project.archived",
-      description: `Archived project "${project.name}".`,
-      metadata: {
-        projectId: project.id,
-        projectName: project.name,
-      },
-    });
+        if (result.count !== 1) {
+          throw new Error("Project changed before archive.");
+        }
+
+        await logActivity(
+          {
+            workspaceId,
+            userId: user.id,
+            projectId: project.id,
+            action: "project.archived",
+            description: `Archived project "${project.name}".`,
+            metadata: {
+              projectId: project.id,
+              projectName: project.name,
+            },
+          },
+          tx,
+        );
+      });
+    } catch (error) {
+      logError("Archive project failed", error, {
+        operation: "archiveProject",
+        workspaceId,
+        projectId,
+      });
+
+      redirect(projectsPageUrl(workspaceId, { error: "database" }));
+    }
   }
 
   revalidatePath(`/dashboard/${workspaceId}`);
@@ -448,27 +465,47 @@ async function restoreProject(formData: FormData) {
   }
 
   if (project.archived) {
-    await prisma.project.updateMany({
-      where: {
-        id: project.id,
-        workspaceId,
-      },
-      data: {
-        archived: false,
-      },
-    });
+    try {
+      await prisma.$transaction(async (tx) => {
+        const result = await tx.project.updateMany({
+          where: {
+            id: project.id,
+            workspaceId,
+            archived: true,
+          },
+          data: {
+            archived: false,
+          },
+        });
 
-    await logActivity({
-      workspaceId,
-      userId: user.id,
-      projectId: project.id,
-      action: "project.restored",
-      description: `Restored project "${project.name}".`,
-      metadata: {
-        projectId: project.id,
-        projectName: project.name,
-      },
-    });
+        if (result.count !== 1) {
+          throw new Error("Project changed before restore.");
+        }
+
+        await logActivity(
+          {
+            workspaceId,
+            userId: user.id,
+            projectId: project.id,
+            action: "project.restored",
+            description: `Restored project "${project.name}".`,
+            metadata: {
+              projectId: project.id,
+              projectName: project.name,
+            },
+          },
+          tx,
+        );
+      });
+    } catch (error) {
+      logError("Restore project failed", error, {
+        operation: "restoreProject",
+        workspaceId,
+        projectId,
+      });
+
+      redirect(projectsPageUrl(workspaceId, { error: "database" }));
+    }
   }
 
   revalidatePath(`/dashboard/${workspaceId}`);

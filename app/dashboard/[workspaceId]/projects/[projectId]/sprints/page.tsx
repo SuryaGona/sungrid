@@ -382,34 +382,39 @@ async function createSprint(formData: FormData) {
   }
 
   try {
-    const sprint = await prisma.sprint.create({
-      data: {
-        workspaceId,
-        projectId,
-        name: parsed.data.name,
-        goal: parsed.data.goal || null,
-        startDate: parseDate(parsed.data.startDate),
-        endDate: parseDate(parsed.data.endDate),
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      const sprint = await tx.sprint.create({
+        data: {
+          workspaceId,
+          projectId,
+          name: parsed.data.name,
+          goal: parsed.data.goal || null,
+          startDate: parseDate(parsed.data.startDate),
+          endDate: parseDate(parsed.data.endDate),
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
 
-    await logActivity({
-      workspaceId,
-      userId: user.id,
-      projectId,
-      sprintId: sprint.id,
-      action: "sprint.created",
-      description: `Created sprint "${sprint.name}" in project "${project.name}".`,
-      metadata: {
-        sprintId: sprint.id,
-        sprintName: sprint.name,
-        projectId,
-        projectName: project.name,
-      },
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId,
+          sprintId: sprint.id,
+          action: "sprint.created",
+          description: `Created sprint "${sprint.name}" in project "${project.name}".`,
+          metadata: {
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            projectId,
+            projectName: project.name,
+          },
+        },
+        tx,
+      );
     });
   } catch (error) {
     logError("Create sprint failed", error, {
@@ -509,30 +514,46 @@ async function startSprint(formData: FormData) {
     );
   }
 
-  await prisma.sprint.update({
-    where: {
-      id: sprint.id,
-    },
-    data: {
-      status: "ACTIVE",
-      startDate: sprint.startDate ?? new Date(),
-    },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.sprint.update({
+        where: {
+          id: sprint.id,
+        },
+        data: {
+          status: "ACTIVE",
+          startDate: sprint.startDate ?? new Date(),
+        },
+      });
 
-  await logActivity({
-    workspaceId,
-    userId: user.id,
-    projectId,
-    sprintId: sprint.id,
-    action: "sprint.started",
-    description: `Started sprint "${sprint.name}".`,
-    metadata: {
-      sprintId: sprint.id,
-      sprintName: sprint.name,
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId,
+          sprintId: sprint.id,
+          action: "sprint.started",
+          description: `Started sprint "${sprint.name}".`,
+          metadata: {
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            projectId,
+            projectName: sprint.project.name,
+          },
+        },
+        tx,
+      );
+    });
+  } catch (error) {
+    logError("Start sprint failed", error, {
+      operation: "startSprint",
+      workspaceId,
       projectId,
-      projectName: sprint.project.name,
-    },
-  });
+      sprintId,
+    });
+
+    redirect(sprintsPageUrl(workspaceId, projectId, { error: "database" }));
+  }
 
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}/sprints`);
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}`);
@@ -692,26 +713,29 @@ async function completeSprint(formData: FormData) {
           generatedSummary,
         },
       });
-    });
 
-    await logActivity({
-      workspaceId,
-      userId: user.id,
-      projectId,
-      sprintId: sprint.id,
-      action: "sprint.completed",
-      description: `Completed sprint "${sprint.name}" and generated its report.`,
-      metadata: {
-        sprintId: sprint.id,
-        sprintName: sprint.name,
-        projectId,
-        projectName: sprint.project.name,
-        totalIssues,
-        completedIssues: completedIssues.length,
-        completionRate,
-        totalPoints,
-        velocity,
-      },
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId,
+          sprintId: sprint.id,
+          action: "sprint.completed",
+          description: `Completed sprint "${sprint.name}" and generated its report.`,
+          metadata: {
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            projectId,
+            projectName: sprint.project.name,
+            totalIssues,
+            completedIssues: completedIssues.length,
+            completionRate,
+            totalPoints,
+            velocity,
+          },
+        },
+        tx,
+      );
     });
   } catch (error) {
     logError("Complete sprint failed", error, {
@@ -807,26 +831,31 @@ async function cancelSprint(formData: FormData) {
   }
 
   try {
-    await logActivity({
-      workspaceId,
-      userId: user.id,
-      projectId,
-      sprintId: sprint.id,
-      action: "sprint.cancelled",
-      description: `Cancelled sprint "${sprint.name}".`,
-      metadata: {
-        sprintId: sprint.id,
-        sprintName: sprint.name,
-        projectId,
-        projectName: sprint.project.name,
-        removedIssueLinks: sprint.issues.length,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId,
+          sprintId: sprint.id,
+          action: "sprint.cancelled",
+          description: `Cancelled sprint "${sprint.name}".`,
+          metadata: {
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            projectId,
+            projectName: sprint.project.name,
+            removedIssueLinks: sprint.issues.length,
+          },
+        },
+        tx,
+      );
 
-    await prisma.sprint.delete({
-      where: {
-        id: sprint.id,
-      },
+      await tx.sprint.delete({
+        where: {
+          id: sprint.id,
+        },
+      });
     });
   } catch (error) {
     logError("Cancel sprint failed", error, {
@@ -938,34 +967,56 @@ async function addIssueToSprint(formData: FormData) {
     );
   }
 
-  await prisma.issue.updateMany({
-    where: {
-      id: issue.id,
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updatedIssue = await tx.issue.updateMany({
+        where: {
+          id: issue.id,
+          workspaceId,
+          projectId,
+          archived: false,
+        },
+        data: {
+          sprintId: sprint.id,
+        },
+      });
+
+      if (updatedIssue.count !== 1) {
+        throw new Error("Issue changed before sprint assignment.");
+      }
+
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId,
+          sprintId: sprint.id,
+          issueId: issue.id,
+          action: "sprint.issue_added",
+          description: `Added issue "${issue.title}" to sprint "${sprint.name}".`,
+          metadata: {
+            issueId: issue.id,
+            issueTitle: issue.title,
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            projectId,
+            projectName: sprint.project.name,
+          },
+        },
+        tx,
+      );
+    });
+  } catch (error) {
+    logError("Add issue to sprint failed", error, {
+      operation: "addIssueToSprint",
       workspaceId,
       projectId,
-    },
-    data: {
-      sprintId: sprint.id,
-    },
-  });
+      sprintId,
+      issueId,
+    });
 
-  await logActivity({
-    workspaceId,
-    userId: user.id,
-    projectId,
-    sprintId: sprint.id,
-    issueId: issue.id,
-    action: "sprint.issue_added",
-    description: `Added issue "${issue.title}" to sprint "${sprint.name}".`,
-    metadata: {
-      issueId: issue.id,
-      issueTitle: issue.title,
-      sprintId: sprint.id,
-      sprintName: sprint.name,
-      projectId,
-      projectName: sprint.project.name,
-    },
-  });
+    redirect(sprintsPageUrl(workspaceId, projectId, { error: "database" }));
+  }
 
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}/sprints`);
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}`);
@@ -1054,35 +1105,57 @@ async function removeIssueFromSprint(formData: FormData) {
     );
   }
 
-  await prisma.issue.updateMany({
-    where: {
-      id: issue.id,
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updatedIssue = await tx.issue.updateMany({
+        where: {
+          id: issue.id,
+          workspaceId,
+          projectId,
+          sprintId,
+          archived: false,
+        },
+        data: {
+          sprintId: null,
+        },
+      });
+
+      if (updatedIssue.count !== 1) {
+        throw new Error("Issue changed before sprint removal.");
+      }
+
+      await logActivity(
+        {
+          workspaceId,
+          userId: user.id,
+          projectId,
+          sprintId: sprint.id,
+          issueId: issue.id,
+          action: "sprint.issue_removed",
+          description: `Removed issue "${issue.title}" from sprint "${sprint.name}".`,
+          metadata: {
+            issueId: issue.id,
+            issueTitle: issue.title,
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            projectId,
+            projectName: sprint.project.name,
+          },
+        },
+        tx,
+      );
+    });
+  } catch (error) {
+    logError("Remove issue from sprint failed", error, {
+      operation: "removeIssueFromSprint",
       workspaceId,
       projectId,
       sprintId,
-    },
-    data: {
-      sprintId: null,
-    },
-  });
+      issueId,
+    });
 
-  await logActivity({
-    workspaceId,
-    userId: user.id,
-    projectId,
-    sprintId: sprint.id,
-    issueId: issue.id,
-    action: "sprint.issue_removed",
-    description: `Removed issue "${issue.title}" from sprint "${sprint.name}".`,
-    metadata: {
-      issueId: issue.id,
-      issueTitle: issue.title,
-      sprintId: sprint.id,
-      sprintName: sprint.name,
-      projectId,
-      projectName: sprint.project.name,
-    },
-  });
+    redirect(sprintsPageUrl(workspaceId, projectId, { error: "database" }));
+  }
 
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}/sprints`);
   revalidatePath(`/dashboard/${workspaceId}/projects/${projectId}`);
@@ -1628,7 +1701,7 @@ export default async function SprintsPage({
                 href={`/dashboard/${workspaceId}/projects/${projectId}`}
                 className="inline-flex h-8 w-fit shrink-0 items-center rounded-full border border-white/10 px-3 text-xs font-bold text-white/55 no-underline transition hover:-translate-y-px hover:bg-white/5 hover:text-white active:translate-y-0 active:scale-[0.98]"
               >
-                ← Back
+                {"\u2190"} Back
               </Link>
 
               <div className="flex min-w-0 flex-wrap justify-end gap-2">
