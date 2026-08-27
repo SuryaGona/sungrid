@@ -5,6 +5,7 @@ import { z } from "zod";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { logActivity } from "@/lib/activity";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { requireWorkspaceRole } from "@/lib/workspace-auth";
 
 export const runtime = "nodejs";
@@ -238,7 +239,10 @@ async function updateWorkspace(formData: FormData) {
       },
     });
   } catch (error) {
-    console.error("Workspace settings update failed:", error);
+    logError("Workspace settings update failed", error, {
+      operation: "updateWorkspaceSettings",
+      workspaceId,
+    });
 
     redirect(
       settingsPageUrl(workspaceId, {

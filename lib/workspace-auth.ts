@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { retryAsync } from "@/lib/retry";
 
 type WorkspaceRole = "OWNER" | "ADMIN" | "MEMBER";
@@ -120,9 +121,9 @@ export async function requireWorkspaceAccess(workspaceId: string) {
   try {
     authenticatedUser = await getAuthenticatedUser(workspaceId);
   } catch (error) {
-    console.error("Workspace access lookup failed:", {
+    logError("Workspace access lookup failed", error, {
       workspaceId,
-      error,
+      operation: "requireWorkspaceAccess",
     });
 
     throw new WorkspaceDatabaseError();

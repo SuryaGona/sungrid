@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { requireWorkspaceAccess } from "@/lib/workspace-auth";
 
 export const runtime = "nodejs";
@@ -304,7 +305,11 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   try {
     dashboardData = await getDashboardData(resolvedWorkspaceId);
   } catch (error) {
-    console.error("Workspace dashboard load failed:", error);
+    logError("Workspace dashboard load failed", error, {
+      operation: "loadWorkspaceDashboard",
+      workspaceId: resolvedWorkspaceId,
+    });
+
     return <DashboardUnavailable />;
   }
 
@@ -495,6 +500,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <p className="m-0 text-sm font-bold text-white/[0.42]">
                 Members
               </p>
+
               <strong
                 className="
                   mt-[9px] block text-[27px] font-extrabold leading-none
@@ -515,6 +521,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <p className="m-0 text-sm font-bold text-white/[0.42]">
                 Active projects
               </p>
+
               <strong
                 className="
                   mt-[9px] block text-[27px] font-extrabold leading-none
@@ -523,6 +530,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               >
                 {activeProjectCount}
               </strong>
+
               <span className="mt-[7px] block text-xs text-white/[0.28]">
                 {projectCount} total
               </span>
@@ -535,7 +543,10 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 shadow-[0_24px_70px_rgba(0,0,0,0.28)]
               "
             >
-              <p className="m-0 text-sm font-bold text-white/[0.42]">Issues</p>
+              <p className="m-0 text-sm font-bold text-white/[0.42]">
+                Issues
+              </p>
+
               <strong
                 className="
                   mt-[9px] block text-[27px] font-extrabold leading-none
@@ -556,6 +567,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <p className="m-0 text-sm font-bold text-white/[0.42]">
                 Completion
               </p>
+
               <strong
                 className="
                   mt-[9px] block text-[27px] font-extrabold leading-none
@@ -564,6 +576,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               >
                 {completionRate}%
               </strong>
+
               <span className="mt-[7px] block text-xs text-white/[0.28]">
                 {completedIssueCount} done
               </span>
@@ -625,6 +638,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   <p className="m-0 text-[13px] font-bold text-white/[0.38]">
                     Activity
                   </p>
+
                   <strong className="mt-2 block text-[23px] font-extrabold text-white">
                     {activityCount}
                   </strong>
@@ -639,6 +653,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   <p className="m-0 text-[13px] font-bold text-white/[0.38]">
                     Open issues
                   </p>
+
                   <strong className="mt-2 block text-[23px] font-extrabold text-white">
                     {openIssueCount}
                   </strong>
@@ -653,6 +668,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   <p className="m-0 text-[13px] font-bold text-white/[0.38]">
                     Completed
                   </p>
+
                   <strong className="mt-2 block text-[23px] font-extrabold text-white">
                     {completedIssueCount}
                   </strong>

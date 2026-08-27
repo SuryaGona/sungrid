@@ -1,3 +1,5 @@
+import { logWarn } from "@/lib/logger";
+
 export async function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -13,19 +15,34 @@ export async function retryAsync<T>(
   const retries = options?.retries ?? 3;
   const delayMs = options?.delayMs ?? 700;
   const label = options?.label ?? "operation";
+  const maxAttempts = retries + 1;
 
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error;
 
-      console.warn(
-        `${label} failed. Attempt ${attempt}/${retries + 1}.`,
-        error,
-      );
+      const errorContext =
+        error instanceof Error
+          ? {
+              errorName: error.name,
+              errorMessage: error.message,
+              errorStack: error.stack,
+            }
+          : {
+              errorMessage: String(error),
+            };
+
+      logWarn(`${label} failed`, {
+        operation: label,
+        attempt,
+        maxAttempts,
+        willRetry: attempt <= retries,
+        ...errorContext,
+      });
 
       if (attempt > retries) {
         break;

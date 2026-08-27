@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { logError, logInfo, logWarn } from "@/lib/logger";
 import { retryAsync } from "@/lib/retry";
 
 export const runtime = "nodejs";
@@ -59,11 +60,21 @@ async function cleanupExpiredGuests(now: Date) {
       },
     );
   } catch (error) {
-    console.error("Guest cleanup failed:", error);
+    logWarn("Guest cleanup failed", {
+      operation: "cleanupExpiredGuests",
+      errorName:
+        error instanceof Error ? error.name : "UnknownError",
+      errorMessage:
+        error instanceof Error ? error.message : String(error),
+      errorStack:
+        error instanceof Error ? error.stack : undefined,
+    });
   }
 }
 
 export async function GET(req: Request) {
+  const startedAt = Date.now();
+
   try {
     await wakeDatabase();
 
@@ -388,9 +399,18 @@ export async function GET(req: Request) {
       },
     );
 
+    logInfo("Guest demo created", {
+      operation: "createGuestDemo",
+      workspaceId: result.workspaceId,
+      durationMs: Date.now() - startedAt,
+    });
+
     return response;
   } catch (error) {
-    console.error("Guest demo failed:", error);
+    logError("Guest demo failed", error, {
+      operation: "createGuestDemo",
+      durationMs: Date.now() - startedAt,
+    });
 
     const errorUrl = new URL("/", req.url);
 

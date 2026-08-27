@@ -2,14 +2,27 @@ import { randomUUID } from "node:crypto";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { retryAsync } from "@/lib/retry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_WORKSPACE_NAME_LENGTH = 80;
+
+const createWorkspaceSchema = z.object({
+  workspaceName: z
+    .string()
+    .trim()
+    .min(1, "Workspace name is required.")
+    .max(
+      MAX_WORKSPACE_NAME_LENGTH,
+      `Workspace name must be ${MAX_WORKSPACE_NAME_LENGTH} characters or fewer.`,
+    ),
+});
 
 type OnboardingPageProps = {
   searchParams?: Promise<{
@@ -254,15 +267,24 @@ async function createWorkspace(formData: FormData) {
     redirect("/onboarding?error=email-missing");
   }
 
-  const workspaceName = String(formData.get("workspaceName") ?? "").trim();
+  const rawWorkspaceName = formData.get("workspaceName");
 
-  if (!workspaceName) {
-    redirect("/onboarding?error=workspace-name-required");
+  const parsed = createWorkspaceSchema.safeParse({
+    workspaceName: rawWorkspaceName,
+  });
+
+  if (!parsed.success) {
+    const candidate =
+      typeof rawWorkspaceName === "string" ? rawWorkspaceName.trim() : "";
+
+    redirect(
+      candidate.length > MAX_WORKSPACE_NAME_LENGTH
+        ? "/onboarding?error=workspace-name-too-long"
+        : "/onboarding?error=workspace-name-required",
+    );
   }
 
-  if (workspaceName.length > MAX_WORKSPACE_NAME_LENGTH) {
-    redirect("/onboarding?error=workspace-name-too-long");
-  }
+  const { workspaceName } = parsed.data;
 
   let workspaceId: string;
 
@@ -432,7 +454,10 @@ async function createWorkspace(formData: FormData) {
 
     workspaceId = result.workspaceId;
   } catch (error) {
-    console.error("Onboarding workspace creation failed:", error);
+    logError("Onboarding workspace creation failed", error, {
+      operation: "createOnboardingWorkspace",
+    });
+
     redirect("/onboarding?error=database");
   }
 
@@ -533,7 +558,9 @@ export default async function OnboardingPage({
       },
     );
   } catch (error) {
-    console.error("Onboarding database load failed:", error);
+    logError("Onboarding database load failed", error, {
+      operation: "loadOnboardingWorkspace",
+    });
 
     return (
       <StatusPage

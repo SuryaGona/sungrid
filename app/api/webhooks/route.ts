@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { Webhook } from "svix";
 
 import { prisma } from "@/lib/db";
+import { logError, logWarn } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -188,6 +189,14 @@ export async function POST(req: Request) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
+    logError(
+      "Clerk webhook configuration missing",
+      new Error("CLERK_WEBHOOK_SECRET is not configured"),
+      {
+        operation: "clerkWebhook",
+      },
+    );
+
     return new Response("Missing webhook secret", { status: 500 });
   }
 
@@ -197,6 +206,13 @@ export async function POST(req: Request) {
   const svixSignature = headerPayload.get("svix-signature");
 
   if (!svixId || !svixTimestamp || !svixSignature) {
+    logWarn("Clerk webhook headers missing", {
+      operation: "verifyClerkWebhook",
+      hasSvixId: Boolean(svixId),
+      hasSvixTimestamp: Boolean(svixTimestamp),
+      hasSvixSignature: Boolean(svixSignature),
+    });
+
     return new Response("Missing webhook headers", { status: 400 });
   }
 
@@ -212,7 +228,13 @@ export async function POST(req: Request) {
       "svix-signature": svixSignature,
     }) as ClerkUserEvent;
   } catch (error) {
-    console.error("Invalid Clerk webhook:", error);
+    logWarn("Invalid Clerk webhook rejected", {
+      operation: "verifyClerkWebhook",
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      errorMessage:
+        error instanceof Error ? error.message : String(error),
+    });
+
     return new Response("Invalid webhook", { status: 400 });
   }
 
@@ -227,7 +249,11 @@ export async function POST(req: Request) {
 
     return new Response("Event ignored", { status: 200 });
   } catch (error) {
-    console.error("Clerk webhook failed:", error);
+    logError("Clerk webhook processing failed", error, {
+      operation: "processClerkWebhook",
+      eventType: event.type,
+    });
+
     return new Response("Webhook failed", { status: 500 });
   }
 }

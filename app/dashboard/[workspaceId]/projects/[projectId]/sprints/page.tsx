@@ -6,6 +6,7 @@ import { z } from "zod";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { logActivity } from "@/lib/activity";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import {
   requireWorkspaceAccess,
   requireWorkspaceRole,
@@ -411,7 +412,12 @@ async function createSprint(formData: FormData) {
       },
     });
   } catch (error) {
-    console.error("Create sprint failed:", error);
+    logError("Create sprint failed", error, {
+      operation: "createSprint",
+      workspaceId,
+      projectId,
+    });
+
     redirect(sprintsPageUrl(workspaceId, projectId, { error: "database" }));
   }
 
@@ -708,7 +714,13 @@ async function completeSprint(formData: FormData) {
       },
     });
   } catch (error) {
-    console.error("Complete sprint failed:", error);
+    logError("Complete sprint failed", error, {
+      operation: "completeSprint",
+      workspaceId,
+      projectId,
+      sprintId,
+    });
+
     redirect(sprintsPageUrl(workspaceId, projectId, { error: "database" }));
   }
 
@@ -817,7 +829,13 @@ async function cancelSprint(formData: FormData) {
       },
     });
   } catch (error) {
-    console.error("Cancel sprint failed:", error);
+    logError("Cancel sprint failed", error, {
+      operation: "cancelSprint",
+      workspaceId,
+      projectId,
+      sprintId,
+    });
+
     redirect(sprintsPageUrl(workspaceId, projectId, { error: "database" }));
   }
 
@@ -1181,11 +1199,7 @@ function AddIssueCard({
   );
 }
 
-function SprintStats({
-  sprint,
-}: {
-  sprint: SprintCardData;
-}) {
+function SprintStats({ sprint }: { sprint: SprintCardData }) {
   const { completedIssues, totalPoints, velocity, completionRate } =
     getSprintMetrics(sprint.issues);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -76,7 +77,15 @@ function SunGridLogo() {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {
-    console.error("SunGrid error:", error);
+    Sentry.withScope((scope) => {
+      scope.setTag("errorBoundary", "dashboard");
+
+      if (error.digest) {
+        scope.setTag("nextjsDigest", error.digest);
+      }
+
+      Sentry.captureException(error);
+    });
   }, [error]);
 
   return (

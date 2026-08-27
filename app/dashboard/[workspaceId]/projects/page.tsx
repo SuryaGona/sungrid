@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { logActivity } from "@/lib/activity";
+import { logError } from "@/lib/logger";
 import {
   requireWorkspaceAccess,
   requireWorkspaceRole,
@@ -226,8 +227,8 @@ function IssueProgressPanel({
           </p>
 
           <p className="m-0 mt-1 text-xs font-bold text-white/40">
-            {progress.totalActive} active • {progress.open} open •{" "}
-            {progress.done} done
+            {progress.totalActive} active {"\u2022"} {progress.open} open{" "}
+            {"\u2022"} {progress.done} done
           </p>
         </div>
 
@@ -329,7 +330,11 @@ async function createProject(formData: FormData) {
       },
     });
   } catch (error) {
-    console.error("Create project failed:", error);
+    logError("Create project failed", error, {
+      operation: "createProject",
+      workspaceId,
+    });
+
     redirect(projectsPageUrl(workspaceId, { error: "database" }));
   }
 
@@ -677,7 +682,7 @@ export default async function ProjectsPage({
                       <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap gap-3 text-sm text-white/40">
                           <span>{project._count.issues} total issues</span>
-                          <span>•</span>
+                          <span>{"\u2022"}</span>
                           <span>{project._count.sprints} sprints</span>
                         </div>
 
@@ -809,7 +814,7 @@ export default async function ProjectsPage({
                       <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap gap-3 text-sm text-white/35">
                           <span>{project._count.issues} total issues</span>
-                          <span>•</span>
+                          <span>{"\u2022"}</span>
                           <span>{project._count.sprints} sprints</span>
                         </div>
 
