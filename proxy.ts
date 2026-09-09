@@ -9,21 +9,29 @@ const isClerkProtectedRoute = createRouteMatcher([
   "/api/workspaces(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  const hasGuestCookie = Boolean(req.cookies.get(GUEST_COOKIE_NAME)?.value);
+export default clerkMiddleware(
+  async (auth, req) => {
+    const hasGuestCookie = Boolean(req.cookies.get(GUEST_COOKIE_NAME)?.value);
 
-  if (hasGuestCookie && isGuestAllowedApiRoute(req)) {
-    return;
-  }
+    if (hasGuestCookie && isGuestAllowedApiRoute(req)) {
+      return;
+    }
 
-  if (isClerkProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
+    if (isClerkProtectedRoute(req)) {
+      await auth.protect();
+    }
+  },
+  {
+    frontendApiProxy: {
+      enabled: true,
+    },
+  },
+);
 
 export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
+    "/__clerk/(.*)",
   ],
 };
