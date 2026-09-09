@@ -21,7 +21,7 @@ const navItems = [
     label: "Overview",
     value: "overview",
     href: "",
-    description: "Dashboard home",
+    description: "Home",
   },
   {
     label: "Projects",
@@ -205,24 +205,6 @@ export async function DashboardSidebar({
           );
         })}
       </nav>
-
-      <div
-        className="
-          mt-4 rounded-[18px]
-          border border-white/[0.08]
-          bg-white/[0.04]
-          p-3.5
-          max-[640px]:hidden
-        "
-      >
-        <p className="m-0 text-[13px] font-bold text-white/[0.82]">
-          Workspace
-        </p>
-
-        <span className="mt-1.5 block text-xs leading-[1.5] text-white/[0.42]">
-          Projects, sprints, and team activity.
-        </span>
-      </div>
     </aside>
   );
 }

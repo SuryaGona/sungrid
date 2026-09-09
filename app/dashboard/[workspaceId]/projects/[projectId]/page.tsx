@@ -89,37 +89,37 @@ const shellClass = `
   max-[560px]:w-[min(100%,calc(100vw-28px))]
 `;
 
-const contentClass = "grid w-full min-w-0 max-w-full gap-4";
+const contentClass = "grid w-full min-w-0 max-w-full gap-3 overflow-hidden";
 
 const cardClass =
-  "rounded-[1.45rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.2)]";
+  "rounded-[1.35rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.2)]";
 
 const heroCardClass =
-  "rounded-[1.45rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.2)]";
+  "rounded-[1.35rem] border border-white/10 bg-white/[0.04] px-4 py-3.5 shadow-[0_18px_48px_rgba(0,0,0,0.2)]";
 
 const sectionHeaderClass =
-  "rounded-[1.3rem] border border-white/[0.08] bg-white/[0.025] px-5 py-4 shadow-[0_14px_36px_rgba(0,0,0,0.16)]";
+  "rounded-[1.2rem] border border-white/[0.08] bg-white/[0.025] px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]";
 
 const metricCardClass =
-  "rounded-[1.25rem] border border-white/10 bg-white/[0.035] p-4 shadow-[0_14px_36px_rgba(0,0,0,0.16)]";
+  "min-w-0 rounded-[1.1rem] border border-white/10 bg-white/[0.035] px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]";
 
 const actionLinkClass =
-  "rounded-[1.25rem] border border-white/10 bg-black/30 p-4 no-underline shadow-[0_14px_36px_rgba(0,0,0,0.16)] transition hover:-translate-y-px hover:border-[#d6bf76]/15 hover:bg-white/[0.035] active:translate-y-0 active:scale-[0.99]";
+  "min-w-0 rounded-[1.1rem] border border-[#d6bf76]/[0.14] bg-[#d6bf76]/[0.025] p-3.5 no-underline shadow-[0_14px_36px_rgba(0,0,0,0.16)] transition hover:-translate-y-px hover:border-[#d6bf76]/[0.24] hover:bg-[#d6bf76]/[0.055] active:translate-y-0 active:scale-[0.99]";
 
 const issueCardClass =
-  "group relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_14px_36px_rgba(0,0,0,0.16)] transition hover:-translate-y-px hover:border-[#d6bf76]/15 hover:bg-white/[0.035]";
+  "group relative overflow-hidden rounded-[1.2rem] border border-white/10 bg-black/30 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_14px_36px_rgba(0,0,0,0.16)] transition hover:-translate-y-px hover:border-[#d6bf76]/15 hover:bg-white/[0.035]";
 
 const archivedIssueCardClass =
-  "relative overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-black/25 p-4 opacity-80 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_14px_36px_rgba(0,0,0,0.14)] transition hover:border-white/[0.12] hover:bg-white/[0.025]";
+  "relative overflow-hidden rounded-[1.2rem] border border-white/[0.08] bg-black/25 p-3.5 opacity-80 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_14px_36px_rgba(0,0,0,0.14)] transition hover:border-white/[0.12] hover:bg-white/[0.025]";
 
 const badgeClass =
   "rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-xs font-bold text-white/55";
 
 const actionButtonClass =
-  "rounded-full border px-4 py-2 text-sm font-bold transition hover:-translate-y-px active:translate-y-0 active:scale-[0.98]";
+  "rounded-full border px-3.5 py-1.5 text-xs font-bold transition hover:-translate-y-px active:translate-y-0 active:scale-[0.98]";
 
 const createButtonClass =
-  "w-fit rounded-full border border-[#d6bf76]/25 bg-[#d6bf76]/[0.12] px-5 py-2.5 text-sm font-extrabold text-[#f4e7b0] transition hover:-translate-y-px hover:bg-[#d6bf76]/[0.18] hover:text-white active:translate-y-0 active:scale-[0.98]";
+  "w-fit rounded-full border border-[#d6bf76]/25 bg-[#d6bf76]/[0.12] px-4 py-2 text-sm font-extrabold text-[#f4e7b0] transition hover:-translate-y-px hover:bg-[#d6bf76]/[0.18] hover:text-white active:translate-y-0 active:scale-[0.98]";
 
 function BackgroundGlows() {
   return (
@@ -814,28 +814,32 @@ export default async function ProjectDetailPage({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Link
                 href={`/dashboard/${workspaceId}/projects`}
-                className="inline-flex w-fit rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-white/55 no-underline transition hover:-translate-y-px hover:bg-white/5 hover:text-white active:translate-y-0 active:scale-[0.98]"
+                className="inline-flex h-8 w-fit shrink-0 items-center rounded-full border border-white/10 px-3 text-xs font-bold text-white/55 no-underline transition hover:-translate-y-px hover:bg-white/5 hover:text-white active:translate-y-0 active:scale-[0.98]"
               >
                 ← Back
               </Link>
 
               {project.archived ? (
-                <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-extrabold text-white/55">
+                <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-xs font-extrabold text-white/55">
                   Archived project
                 </span>
               ) : (
-                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-extrabold text-emerald-200">
+                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-xs font-extrabold text-emerald-200">
                   Active project
                 </span>
               )}
             </div>
 
-            <div className="mt-5">
-              <h1 className="m-0 text-2xl font-extrabold tracking-[-0.04em] text-white md:text-3xl">
+            <div className="mt-3 min-w-0">
+              <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#d6bf76]">
+                Project details
+              </p>
+
+              <h1 className="m-0 mt-1 truncate text-[25px] font-extrabold tracking-[-0.04em] text-white md:text-[28px]">
                 Project: {project.name}
               </h1>
 
-              <p className="m-0 mt-2 max-w-3xl text-sm leading-6 text-white/50">
+              <p className="m-0 mt-1 max-w-3xl truncate text-sm text-white/45">
                 {project.description ||
                   "Manage issues, board flow, sprint planning, and delivery history."}
               </p>
@@ -856,53 +860,53 @@ export default async function ProjectDetailPage({
 
           <section className="grid gap-3 md:grid-cols-4">
             <div className={metricCardClass}>
-              <p className="m-0 text-sm font-bold text-white/45">
+              <p className="m-0 truncate text-xs font-bold text-white/45">
                 Active issues
               </p>
 
-              <strong className="mt-2 block text-2xl font-extrabold tracking-[-0.04em] text-white">
+              <strong className="mt-1.5 block truncate text-xl font-extrabold tracking-[-0.04em] text-white">
                 {activeIssues.length}
               </strong>
 
-              <span className="mt-1.5 block text-xs text-white/35">
+              <span className="mt-1 block truncate text-xs text-white/35">
                 {openIssues} open · {completedIssues} done
               </span>
             </div>
 
             <div className={metricCardClass}>
-              <p className="m-0 text-sm font-bold text-white/45">Completion</p>
+              <p className="m-0 truncate text-xs font-bold text-white/45">Completion</p>
 
-              <strong className="mt-2 block text-2xl font-extrabold tracking-[-0.04em] text-white">
+              <strong className="mt-1.5 block truncate text-xl font-extrabold tracking-[-0.04em] text-white">
                 {completionRate}%
               </strong>
 
-              <span className="mt-1.5 block text-xs text-white/35">
+              <span className="mt-1 block truncate text-xs text-white/35">
                 Active issues only
               </span>
             </div>
 
             <div className={metricCardClass}>
-              <p className="m-0 text-sm font-bold text-white/45">Sprints</p>
+              <p className="m-0 truncate text-xs font-bold text-white/45">Sprints</p>
 
-              <strong className="mt-2 block text-2xl font-extrabold tracking-[-0.04em] text-white">
+              <strong className="mt-1.5 block truncate text-xl font-extrabold tracking-[-0.04em] text-white">
                 {totalSprints}
               </strong>
 
-              <span className="mt-1.5 block text-xs text-white/35">
+              <span className="mt-1 block truncate text-xs text-white/35">
                 {activeSprints} active · {completedSprints} done
               </span>
             </div>
 
             <div className={metricCardClass}>
-              <p className="m-0 text-sm font-bold text-white/45">
+              <p className="m-0 truncate text-xs font-bold text-white/45">
                 Archived issues
               </p>
 
-              <strong className="mt-2 block text-2xl font-extrabold tracking-[-0.04em] text-white">
+              <strong className="mt-1.5 block truncate text-xl font-extrabold tracking-[-0.04em] text-white">
                 {archivedIssues.length}
               </strong>
 
-              <span className="mt-1.5 block text-xs text-white/35">
+              <span className="mt-1 block truncate text-xs text-white/35">
                 Hidden from active work
               </span>
             </div>
@@ -913,11 +917,11 @@ export default async function ProjectDetailPage({
               href={`/dashboard/${workspaceId}/projects/${projectId}/board`}
               className={actionLinkClass}
             >
-              <p className="m-0 text-base font-extrabold text-white">
+              <p className="m-0 break-words text-sm font-extrabold text-white">
                 Open board
               </p>
 
-              <p className="m-0 mt-1.5 line-clamp-2 text-sm leading-6 text-white/45">
+              <p className="m-0 mt-1 line-clamp-2 break-words text-sm leading-5 text-white/45">
                 Move active issues through each project status.
               </p>
             </Link>
@@ -926,11 +930,11 @@ export default async function ProjectDetailPage({
               href={`/dashboard/${workspaceId}/projects/${projectId}/sprints`}
               className={actionLinkClass}
             >
-              <p className="m-0 text-base font-extrabold text-white">
+              <p className="m-0 break-words text-sm font-extrabold text-white">
                 Sprint planning
               </p>
 
-              <p className="m-0 mt-1.5 line-clamp-2 text-sm leading-6 text-white/45">
+              <p className="m-0 mt-1 line-clamp-2 break-words text-sm leading-5 text-white/45">
                 Plan cycles, assign issues, and complete sprints.
               </p>
             </Link>
@@ -939,11 +943,11 @@ export default async function ProjectDetailPage({
               href={`/dashboard/${workspaceId}/analytics`}
               className={actionLinkClass}
             >
-              <p className="m-0 text-base font-extrabold text-white">
+              <p className="m-0 break-words text-sm font-extrabold text-white">
                 Analytics
               </p>
 
-              <p className="m-0 mt-1.5 line-clamp-2 text-sm leading-6 text-white/45">
+              <p className="m-0 mt-1 line-clamp-2 break-words text-sm leading-5 text-white/45">
                 Review completion, sprint performance, and activity.
               </p>
             </Link>
@@ -952,11 +956,11 @@ export default async function ProjectDetailPage({
           <section className="grid gap-3">
             <div className={sectionHeaderClass}>
               <div>
-                <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-[#d6bf76]">
+                <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#d6bf76]">
                   Active issues
                 </p>
 
-                <h2 className="m-0 mt-2 text-xl font-extrabold text-white">
+                <h2 className="m-0 mt-1.5 truncate text-lg font-extrabold text-white">
                   {activeIssues.length} active
                 </h2>
               </div>
@@ -1001,12 +1005,12 @@ export default async function ProjectDetailPage({
                         <div className="min-w-0">
                           <Link
                             href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
-                            className="text-base font-extrabold text-white no-underline transition hover:text-[#f4e7b0]"
+                            className="text-sm font-extrabold text-white no-underline transition hover:text-[#f4e7b0]"
                           >
                             {issue.title}
                           </Link>
 
-                          <p className="m-0 mt-1.5 line-clamp-1 max-w-3xl text-sm leading-6 text-white/45">
+                          <p className="m-0 mt-1 line-clamp-1 max-w-3xl text-sm leading-5 text-white/45">
                             {issue.description || "No description provided."}
                           </p>
                         </div>
@@ -1080,11 +1084,11 @@ export default async function ProjectDetailPage({
           {!project.archived && activeIssues.length > 0 ? (
             <section id="create-issue" className={cardClass}>
               <div className="mb-5">
-                <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-white/35">
+                <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.22em] text-white/35">
                   New issue
                 </p>
 
-                <h2 className="m-0 mt-2 text-xl font-extrabold text-white">
+                <h2 className="m-0 mt-1.5 text-lg font-extrabold text-white">
                   Create issue
                 </h2>
 
@@ -1105,11 +1109,11 @@ export default async function ProjectDetailPage({
           <section className="grid gap-3">
             <div className={sectionHeaderClass}>
               <div>
-                <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-white/35">
+                <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.22em] text-white/35">
                   Archived issues
                 </p>
 
-                <h2 className="m-0 mt-2 text-xl font-extrabold text-white">
+                <h2 className="m-0 mt-1.5 truncate text-lg font-extrabold text-white">
                   {archivedIssues.length} archived
                 </h2>
               </div>
@@ -1130,12 +1134,12 @@ export default async function ProjectDetailPage({
                         <div className="min-w-0">
                           <Link
                             href={`/dashboard/${workspaceId}/projects/${projectId}/issues/${issue.id}`}
-                            className="text-base font-extrabold text-white/85 no-underline transition hover:text-[#f4e7b0]"
+                            className="text-sm font-extrabold text-white/85 no-underline transition hover:text-[#f4e7b0]"
                           >
                             {issue.title}
                           </Link>
 
-                          <p className="m-0 mt-1.5 line-clamp-1 max-w-3xl text-sm leading-6 text-white/38">
+                          <p className="m-0 mt-1 line-clamp-1 max-w-3xl text-sm leading-5 text-white/38">
                             {issue.description || "No description provided."}
                           </p>
                         </div>

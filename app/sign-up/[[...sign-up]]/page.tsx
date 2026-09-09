@@ -97,6 +97,10 @@ const clerkAppearance = {
       color: "#f8f8f6",
       boxShadow:
         "inset 0 1px 0 rgba(255,255,255,0.035), 0 0 0 1px transparent",
+      "&::placeholder": {
+        color: "#b8bab6",
+        opacity: "1",
+      },
     },
     formFieldInputShowPasswordButton: {
       color: "#a8aaa6",

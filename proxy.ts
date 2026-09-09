@@ -23,7 +23,7 @@ export default clerkMiddleware(
   },
   {
     frontendApiProxy: {
-      enabled: true,
+      enabled: (url) => url.hostname === "sungrid-six.vercel.app",
     },
   },
 );

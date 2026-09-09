@@ -17,7 +17,46 @@ concurrency:
 
 jobs:
   quality:
-    name: Quality and Build
+    name: CI / Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+      CLERK_WEBHOOK_SECRET: whsec_ci_placeholder
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Validate Prisma schema
+        run: npm run prisma:validate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+  tests:
+    name: CI / Unit & Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -39,9 +78,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-
       DATABASE_URL: postgresql://sungrid:sungrid_ci@localhost:5432/sungrid_ci
-
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jb20k
       CLERK_SECRET_KEY: sk_test_ci_placeholder
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
@@ -61,32 +98,50 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit dependencies
-        run: npm audit
-
       - name: Generate Prisma client
         run: npm run prisma:generate
-
-      - name: Validate Prisma schema
-        run: npm run prisma:validate
 
       - name: Create CI database schema
         run: npx prisma db push
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
+      - name: Run test suite
         run: npm test
+
+  build:
+    name: CI / Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+      CLERK_WEBHOOK_SECRET: whsec_ci_placeholder
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
 
       - name: Production build
         run: npm run build
 
   e2e:
-    name: Playwright E2E
+    name: CI / Playwright E2E
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -110,9 +165,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-
       DATABASE_URL: postgresql://sungrid:sungrid_ci@localhost:5432/sungrid_ci
-
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
@@ -151,3 +204,27 @@ jobs:
           path: playwright-report/
           retention-days: 7
           if-no-files-found: ignore
+
+  security:
+    name: CI / Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit all dependencies
+        run: npm audit
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev

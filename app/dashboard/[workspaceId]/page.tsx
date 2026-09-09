@@ -107,7 +107,7 @@ function SunLogo() {
 
 function Kicker({ children }: { children: React.ReactNode }) {
   return (
-    <p className="m-0 text-xs font-extrabold uppercase tracking-[0.14em] text-[#d6bf76]">
+    <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#d6bf76]">
       {children}
     </p>
   );
@@ -410,7 +410,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           activePage="overview"
         />
 
-        <section className="grid w-full min-w-0 max-w-full gap-4">
+        <section className="grid w-full min-w-0 max-w-full gap-3 overflow-hidden">
           <section
             className="
               flex items-end justify-between gap-[22px] rounded-[26px]
@@ -426,8 +426,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
               <h2
                 className="
-                  m-0 mt-2.5 max-w-[680px] text-[clamp(30px,3.4vw,38px)]
-                  font-extrabold leading-none tracking-[-0.055em] text-white
+                  m-0 mt-1 max-w-[680px] text-[25px]
+                  font-extrabold tracking-[-0.04em] text-white md:text-[28px]
                 "
               >
                 Welcome, {displayName}
@@ -435,8 +435,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
               <p
                 className="
-                  m-0 mt-[13px] max-w-[600px] text-[15px]
-                  leading-[1.6] text-white/[0.52]
+                  m-0 mt-1 max-w-[600px] text-sm
+                  leading-6 text-white/[0.45]
                 "
               >
                 Track projects, issues, sprints, and recent activity from one
@@ -497,14 +497,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 shadow-[0_24px_70px_rgba(0,0,0,0.28)]
               "
             >
-              <p className="m-0 text-sm font-bold text-white/[0.42]">
+              <p className="m-0 truncate text-xs font-bold text-white/[0.45]">
                 Members
               </p>
 
               <strong
                 className="
-                  mt-[9px] block text-[27px] font-extrabold leading-none
-                  tracking-[-0.045em] text-white
+                  mt-1.5 block truncate text-xl font-extrabold
+                  tracking-[-0.04em] text-white
                 "
               >
                 {memberCount}
@@ -518,14 +518,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 shadow-[0_24px_70px_rgba(0,0,0,0.28)]
               "
             >
-              <p className="m-0 text-sm font-bold text-white/[0.42]">
+              <p className="m-0 truncate text-xs font-bold text-white/[0.45]">
                 Active projects
               </p>
 
               <strong
                 className="
-                  mt-[9px] block text-[27px] font-extrabold leading-none
-                  tracking-[-0.045em] text-white
+                  mt-1.5 block truncate text-xl font-extrabold
+                  tracking-[-0.04em] text-white
                 "
               >
                 {activeProjectCount}
@@ -543,14 +543,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 shadow-[0_24px_70px_rgba(0,0,0,0.28)]
               "
             >
-              <p className="m-0 text-sm font-bold text-white/[0.42]">
+              <p className="m-0 truncate text-xs font-bold text-white/[0.45]">
                 Issues
               </p>
 
               <strong
                 className="
-                  mt-[9px] block text-[27px] font-extrabold leading-none
-                  tracking-[-0.045em] text-white
+                  mt-1.5 block truncate text-xl font-extrabold
+                  tracking-[-0.04em] text-white
                 "
               >
                 {issueCount}
@@ -564,14 +564,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 shadow-[0_24px_70px_rgba(0,0,0,0.28)]
               "
             >
-              <p className="m-0 text-sm font-bold text-white/[0.42]">
+              <p className="m-0 truncate text-xs font-bold text-white/[0.45]">
                 Completion
               </p>
 
               <strong
                 className="
-                  mt-[9px] block text-[27px] font-extrabold leading-none
-                  tracking-[-0.045em] text-white
+                  mt-1.5 block truncate text-xl font-extrabold
+                  tracking-[-0.04em] text-white
                 "
               >
                 {completionRate}%
@@ -603,8 +603,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
                   <h3
                     className="
-                      m-0 mt-[7px] text-[21px] font-extrabold
-                      tracking-[-0.04em] text-white
+                      m-0 mt-1.5 text-lg font-extrabold
+                      text-white
                     "
                   >
                     Current work
@@ -635,11 +635,11 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                     bg-[#050505] p-3.5
                   "
                 >
-                  <p className="m-0 text-[13px] font-bold text-white/[0.38]">
+                  <p className="m-0 text-xs font-bold text-white/[0.45]">
                     Activity
                   </p>
 
-                  <strong className="mt-2 block text-[23px] font-extrabold text-white">
+                  <strong className="mt-1.5 block text-xl font-extrabold tracking-[-0.04em] text-white">
                     {activityCount}
                   </strong>
                 </div>
@@ -650,11 +650,11 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                     bg-[#050505] p-3.5
                   "
                 >
-                  <p className="m-0 text-[13px] font-bold text-white/[0.38]">
+                  <p className="m-0 text-xs font-bold text-white/[0.45]">
                     Open issues
                   </p>
 
-                  <strong className="mt-2 block text-[23px] font-extrabold text-white">
+                  <strong className="mt-1.5 block text-xl font-extrabold tracking-[-0.04em] text-white">
                     {openIssueCount}
                   </strong>
                 </div>
@@ -665,11 +665,11 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                     bg-[#050505] p-3.5
                   "
                 >
-                  <p className="m-0 text-[13px] font-bold text-white/[0.38]">
+                  <p className="m-0 text-xs font-bold text-white/[0.45]">
                     Completed
                   </p>
 
-                  <strong className="mt-2 block text-[23px] font-extrabold text-white">
+                  <strong className="mt-1.5 block text-xl font-extrabold tracking-[-0.04em] text-white">
                     {completedIssueCount}
                   </strong>
                 </div>
@@ -701,8 +701,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
                   <h3
                     className="
-                      m-0 mt-[7px] text-[21px] font-extrabold
-                      tracking-[-0.04em] text-white
+                      m-0 mt-1.5 text-lg font-extrabold
+                      text-white
                     "
                   >
                     Latest updates

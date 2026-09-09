@@ -627,11 +627,11 @@ export default async function ProjectsPage({
 
         <section className={contentClass}>
           <header className={cardClass}>
-            <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-[#d6bf76]">
+            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#d6bf76]">
               Projects
             </p>
 
-            <h1 className="m-0 mt-3 text-3xl font-extrabold tracking-[-0.04em] text-white md:text-4xl">
+            <h1 className="m-0 mt-3 text-[25px] font-extrabold tracking-[-0.04em] text-white md:text-[28px]">
               {workspace.name} projects
             </h1>
 
@@ -656,11 +656,11 @@ export default async function ProjectsPage({
           <section className="grid gap-3">
             <div className={sectionHeaderClass}>
               <div>
-                <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-[#d6bf76]">
+                <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#d6bf76]">
                   Active projects
                 </p>
 
-                <h2 className="m-0 mt-2 text-xl font-extrabold text-white">
+                <h2 className="m-0 mt-2 text-lg font-extrabold text-white">
                   {activeProjects.length} active
                 </h2>
               </div>
@@ -772,11 +772,11 @@ export default async function ProjectsPage({
           {canManageProjects && activeProjects.length > 0 ? (
             <section id="create-project" className={cardClass}>
               <div className="mb-5">
-                <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-white/35">
+                <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.22em] text-white/35">
                   New project
                 </p>
 
-                <h2 className="m-0 mt-2 text-xl font-extrabold text-white">
+                <h2 className="m-0 mt-2 text-lg font-extrabold text-white">
                   Create project
                 </h2>
 
@@ -806,11 +806,11 @@ export default async function ProjectsPage({
           <section className="grid gap-3">
             <div className={sectionHeaderClass}>
               <div>
-                <p className="m-0 text-xs font-extrabold uppercase tracking-[0.22em] text-white/35">
+                <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.22em] text-white/35">
                   Archived projects
                 </p>
 
-                <h2 className="m-0 mt-2 text-xl font-extrabold text-white">
+                <h2 className="m-0 mt-2 text-lg font-extrabold text-white">
                   {archivedProjects.length} archived
                 </h2>
               </div>
