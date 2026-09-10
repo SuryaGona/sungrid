@@ -607,18 +607,6 @@ Sprint reports are currently generated during sprint completion.
 
 A background queue is not required by the present workload, so one is not included solely for architectural appearance.
 
-### No Billing Layer
-
-Billing was intentionally removed from the application.
-
-SunGrid is currently focused on workspace operations, authorization, delivery workflows, reliability, and engineering quality rather than presenting unused SaaS infrastructure.
-
-### No In-Memory Production Rate Limiter
-
-The guest demo creates server-side data, but a fake per-instance in-memory limiter would not provide reliable protection in a serverless deployment.
-
-A durable distributed rate limiter would require external shared state and should be introduced only when the traffic requirement justifies that infrastructure.
-
 ---
 
 ## Repository Engineering
