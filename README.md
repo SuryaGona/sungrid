@@ -2,105 +2,160 @@
 
 SunGrid is a multi-tenant project and workspace management application built with Next.js, TypeScript, PostgreSQL, Prisma, and Clerk.
 
-It includes project management, issue tracking, Kanban boards, sprint planning, reporting, analytics, activity history, member management, and a one-click guest demo.
+It includes project and issue management, Kanban boards, sprint planning, reporting, analytics, member management, activity history, and isolated guest demo workspaces.
 
-The main focus of the project is workspace isolation and server-side authorization. Users authenticate globally, but access to projects, issues, sprints, reports, members, and activity is scoped to their workspace membership and role.
+The application is built around workspace-level tenant isolation. Users authenticate globally, but access to data is determined by their membership and role inside each workspace.
 
 ## Features
 
 ### Workspaces and Access Control
 
-- Multi-tenant workspace model
-- Clerk authentication
-- `OWNER`, `ADMIN`, and `MEMBER` roles
-- Server-side workspace checks
-- Role-based authorization
-- Workspace-scoped database queries
-- Tenant-scoped resource lookups
-- Isolated guest demo workspaces
+The workspace is the main tenant boundary in SunGrid.
 
-Authentication and authorization are handled separately.
+Users can belong to multiple workspaces, with permissions determined independently inside each one.
 
-Being signed in does not automatically give a user access to workspace data. The application verifies workspace membership and role before protected data is loaded or changed.
+Supported roles:
 
-Protected mutations also perform their own authorization checks instead of relying on whether a button is visible in the UI.
+* `OWNER`
+* `ADMIN`
+* `MEMBER`
 
-## Projects and Issues
+Clerk handles authentication, while SunGrid handles authorization through workspace membership, role checks, and tenant-scoped database queries.
 
-- Workspace-scoped projects
-- Issue status, priority, type, story points, reporter, and assignee
-- Kanban board with drag-and-drop issue movement
-- Project archive and restore
-- Issue archive and restore
-- Comments
-- Activity history
-- Historical data preserved for reporting
+Protected mutations perform authorization checks on the server rather than relying on UI visibility.
 
-## Sprint Management
+### Projects
 
-- Planned, active, and completed sprint lifecycle
-- Add and remove issues from sprints
-- Sprint completion
-- Sprint cancellation
-- Completion-rate calculations
-- Velocity calculations
-- Sprint reports
-- Completed sprint history
-- Transactional sprint lifecycle updates
+Projects belong to a workspace and organize the work tracked by a team.
 
-## Analytics and Activity
+Users can:
 
-SunGrid includes workspace-level reporting and activity tracking for:
+* create projects
+* view project details
+* archive projects
+* restore archived projects
+* manage project issues
+* use a project Kanban board
+* manage project sprints
 
-- projects
-- issues
-- sprints
-- members
-- activity
-- sprint completion
-- velocity
-- recent workspace events
+Projects use archive and restore instead of normal destructive deletion so historical data remains available.
 
-Important workspace actions are stored as durable activity history.
+### Issues
 
-## Guest Demo
+Issues are scoped to both a workspace and project.
 
-SunGrid includes a one-click guest demo so the app can be explored without creating an account.
+Each issue can include:
 
-Each guest gets their own temporary workspace containing seeded:
+* status
+* priority
+* type
+* story points
+* reporter
+* assignee
+* sprint assignment
+* comments
+* activity history
 
-- projects
-- issues
-- sprint data
-- reports
-- activity history
+Issues can be created, updated, assigned, archived, restored, and moved between statuses.
 
-Guest workspaces also have an expiration time.
+Issue lookups include tenant context rather than trusting a resource ID by itself.
 
-Each guest workspace is isolated, so one demo session does not modify another user's data.
+### Kanban Board
+
+Each project includes a Kanban board for active issues.
+
+Issues can be moved between columns using drag-and-drop, with changes persisted through the application rather than existing only in browser state.
+
+The board loads the active issue working set together so drag-and-drop operations have the state they need.
+
+### Sprints
+
+SunGrid supports sprint planning and lifecycle management.
+
+Users can:
+
+* create sprints
+* add issues to sprints
+* remove issues from sprints
+* start sprints
+* complete sprints
+* cancel sprints
+* review completed sprint reports
+
+Completing a sprint records delivery data such as completion rate and velocity and persists a `SprintReport`.
+
+Completed sprint history remains available for reporting.
+
+### Analytics
+
+Workspace analytics include data around:
+
+* projects
+* issues
+* sprints
+* completion rates
+* velocity
+* members
+* recent workspace activity
+
+### Activity History
+
+Important workspace actions are stored in `ActivityLog`.
+
+Tracked events include:
+
+* project creation
+* project archive and restore
+* issue creation and updates
+* issue archive and restore
+* issue movement
+* comment creation
+* sprint creation
+* sprint start, completion, and cancellation
+* sprint issue assignment and removal
+* member changes
+* workspace updates
+
+Activity history is part of the application's persisted data model and is displayed back to users.
+
+### Guest Demo
+
+SunGrid includes a guest demo that can be opened without creating an account.
+
+Each guest session receives its own temporary workspace with seeded:
+
+* projects
+* issues
+* sprint data
+* reports
+* activity history
+
+Guest workspaces are isolated from one another and include an expiration time for cleanup.
 
 ## Tech Stack
 
-| Area | Technology |
-| --- | --- |
-| Framework | Next.js App Router |
-| Language | TypeScript |
-| UI | React, Tailwind CSS |
-| Authentication | Clerk |
-| Database | PostgreSQL |
-| Production Database | Neon |
-| ORM | Prisma |
-| Validation | Zod |
-| Testing | Vitest, Playwright |
-| Local Database | Docker Compose |
-| CI/CD | GitHub Actions |
-| Security | CodeQL, Dependabot, npm audit |
-| Observability | Sentry, structured logging |
-| Deployment | Vercel |
+| Area                | Technology                      |
+| ------------------- | ------------------------------- |
+| Framework           | Next.js App Router              |
+| Language            | TypeScript                      |
+| UI                  | React, Tailwind CSS             |
+| Authentication      | Clerk                           |
+| Database            | PostgreSQL                      |
+| Production Database | Neon                            |
+| ORM                 | Prisma                          |
+| Validation          | Zod                             |
+| Testing             | Vitest, Playwright              |
+| Local Database      | Docker Compose                  |
+| CI                  | GitHub Actions                  |
+| Security            | CodeQL, Dependabot, npm audit   |
+| Observability       | Sentry, structured JSON logging |
+| Deployment          | Vercel                          |
 
 ## Architecture
 
-SunGrid uses a server-first Next.js architecture.
+SunGrid uses a server-first Next.js App Router architecture.
+
+Most reads and mutations are handled through Server Components, Server Actions, and route handlers.
 
 ```text
 Browser
@@ -111,49 +166,91 @@ Next.js App Router
    +--> Server Components
    |
    +--> Server Actions / Route Handlers
-              |
-              +--> Zod Validation
-              |
-              +--> Authentication
-              |
-              +--> Workspace / RBAC Checks
-              |
-              +--> Prisma
-                     |
-                     v
-                 PostgreSQL
+             |
+             +--> Zod Validation
+             |
+             +--> Authentication
+             |
+             +--> Workspace / RBAC Checks
+             |
+             +--> Prisma
+                    |
+                    v
+                PostgreSQL
 ```
 
-Most data access and mutations happen on the server.
+Route handlers are used where an HTTP boundary makes sense, including:
 
-Route handlers are used where an HTTP boundary makes sense, including guest-demo entry, webhooks, and issue movement.
+* guest demo entry
+* Clerk webhooks
+* issue movement
+* guest cleanup
 
-## Tenant Isolation and RBAC
+## Authentication and Authorization
 
-The workspace is the main tenant boundary.
+Clerk handles user authentication.
+
+SunGrid handles workspace authorization.
 
 A protected request generally follows this flow:
 
-1. Resolve the current Clerk or guest identity
-2. Resolve the internal SunGrid user
-3. Verify workspace membership
-4. Load the user's workspace role
-5. Scope database access to that workspace
-6. Apply any role-specific permission checks
+```text
+Resolve Clerk or guest identity
+        |
+        v
+Resolve internal user
+        |
+        v
+Verify workspace membership
+        |
+        v
+Load workspace role
+        |
+        v
+Scope database access
+        |
+        v
+Apply action permissions
+```
 
-SunGrid uses three workspace roles:
+Roles are stored on workspace memberships rather than as one global application role.
 
-| Role | Responsibility |
-| --- | --- |
-| `OWNER` | Full workspace administration and member management |
-| `ADMIN` | Project and delivery management |
-| `MEMBER` | Normal workspace participation |
+### OWNER
 
-Nested resources are not trusted by ID alone.
+Owners can manage workspace-level administration, member governance, and workspace settings.
 
-For example, project and issue operations include workspace or project context in their database queries so an ID from another tenant cannot be used as a valid access path.
+### ADMIN
+
+Admins can manage project and delivery workflows without owner-only workspace permissions.
+
+### MEMBER
+
+Members can participate in normal workspace work based on the permissions for each action.
+
+Authorization is enforced on the server. UI visibility is only presentation logic and is not treated as the security boundary.
+
+## Tenant Isolation
+
+Tenant isolation is centered around `workspaceId`.
+
+Protected reads and mutations include workspace context directly in database queries.
+
+Nested resources also include their parent context where needed.
+
+For example, a project or issue ID by itself is not treated as proof that the resource belongs to the current workspace.
+
+This applies across:
+
+* project access
+* issue access
+* issue movement
+* sprint operations
+* membership management
+* archive and restore flows
 
 ## Data Model
+
+The main relational model is centered around `Workspace`.
 
 ```mermaid
 erDiagram
@@ -185,43 +282,49 @@ erDiagram
     User ||--o{ ActivityLog : performs
 ```
 
-The data model is centered around `Workspace`, which owns the tenant-specific application data.
+Membership connects users to workspaces and stores their role inside each workspace.
 
-Memberships connect users to workspaces and store each user's role.
+The database also enforces rules such as one membership per user/workspace pair.
 
 ## Data Integrity and Transactions
 
-SunGrid uses PostgreSQL constraints together with application-level authorization.
+PostgreSQL constraints and application-level authorization work together to protect application state.
 
-Important integrity rules include:
+Key project and sprint lifecycle operations use Prisma transactions when multiple writes belong to the same logical action.
 
-- one membership per user/workspace pair
-- foreign-key relationships between tenant resources
-- explicit cascade or nullification behavior where needed
-- archive/restore instead of normal destructive deletion for projects and issues
-- completed sprint history preserved for reporting
-- transactions for mutations that must update multiple records together
+Transactional sprint operations include:
 
-For example, completing a sprint updates the sprint, creates its report, and records the related activity event inside one transaction.
+* sprint creation
+* sprint start
+* sprint completion
+* sprint cancellation
+* adding an issue to a sprint
+* removing an issue from a sprint
 
-Project creation, archive, and restore also write their activity events transactionally.
+Transactional project operations include:
 
-If one required write fails, the transaction rolls back instead of leaving the application in a partially updated state.
+* project creation
+* project archive
+* project restore
+
+For example, sprint completion updates the sprint, writes the sprint report, and records the completion activity inside the same transaction.
+
+```text
+prisma.$transaction
+        |
+        +--> Business Mutation
+        |
+        +--> ActivityLog Mutation
+        |
+        v
+      Commit
+```
+
+If one required write fails, the transaction rolls back instead of leaving application state and activity history out of sync.
 
 ## Query and Index Design
 
-Indexes were added around actual application query patterns instead of creating single-column indexes for everything.
-
-Examples include indexes for:
-
-- workspace project listings
-- active and archived projects
-- workspace issue status queries
-- project issue loading
-- sprint planning
-- archived issue history
-- recent sprint reports
-- recent workspace activity
+Database indexes are based on actual application query patterns.
 
 Representative indexes include:
 
@@ -246,106 +349,143 @@ SprintReport(workspaceId, createdAt)
 ActivityLog(workspaceId, createdAt)
 ```
 
-Redundant single-column indexes were removed where existing composite indexes already covered the useful query prefix.
+These support common application queries such as:
+
+* workspace project listings
+* active and archived project filtering
+* issue status queries
+* project issue loading
+* sprint planning
+* issue ordering
+* recent activity
+* sprint report history
+
+Redundant single-column indexes were removed where an existing composite index already covered the useful prefix.
 
 ## Pagination and Working Sets
 
-Pagination was added based on how each screen is actually used.
+Pagination is handled based on how each screen actually uses its data.
 
 Current choices include:
 
-- activity history limited to the latest 50 events
-- small recent-activity queries on the dashboard
-- bounded recent analytics data
-- active Kanban issues loaded together
-- sprint-planning issues loaded together
-- project and sprint lists left unpaginated at the current expected workspace size
+* recent activity is bounded
+* dashboard and analytics views use recent data
+* Kanban loads the active issue working set together
+* sprint planning loads its active working set together
+* project and sprint lists currently remain unpaginated
 
-The Kanban board is intentionally not paginated because drag-and-drop ordering depends on having the active board state available as one working set.
+The Kanban and sprint-planning views intentionally keep their working sets together because those records are needed at the same time for interaction.
 
 ## Testing
 
-SunGrid uses Vitest for application and database testing and Playwright for browser E2E coverage.
+SunGrid uses Vitest for application and database testing and Playwright for browser E2E testing.
 
 ### Vitest
 
-The test suite contains **38 tests across 6 files**:
+The current suite contains **38 tests across 6 files**.
 
-- workspace authentication and tenant isolation — **8 tests**
-- member permissions and RBAC — **9 tests**
-- issue movement routes — **8 tests**
-- project lifecycle rules — **8 tests**
-- infrastructure/runtime behavior — **2 tests**
-- real PostgreSQL integrity — **3 tests**
+| Area                                          |  Tests |
+| --------------------------------------------- | -----: |
+| Workspace authentication and tenant isolation |      8 |
+| Member permissions and RBAC                   |      9 |
+| Issue movement                                |      8 |
+| Project lifecycle                             |      8 |
+| Infrastructure / runtime                      |      2 |
+| PostgreSQL integrity                          |      3 |
+| **Total**                                     | **38** |
 
-The PostgreSQL integrity tests use the real Prisma client against a Dockerized PostgreSQL test database rather than database mocks.
+The PostgreSQL integrity tests use a real Prisma client against a Dockerized PostgreSQL test database.
 
 They verify:
 
-- unique user/workspace membership constraints
-- tenant-scoped issue queries
-- workspace cascade behavior
+* duplicate membership constraints
+* tenant-scoped issue queries
+* workspace cascade behavior
 
-Other tests cover failure and negative paths including:
+The rest of the suite covers cases including:
 
-- unauthenticated access
-- incorrect roles
-- cross-workspace identifiers
-- expired guest access
-- invalid issue movement input
-- archived project behavior
-- archive/restore authorization
-- idempotent lifecycle operations
+* unauthenticated access
+* invalid roles
+* cross-workspace IDs
+* expired guest sessions
+* invalid issue movement
+* archived project behavior
+* archive and restore lifecycle
+* idempotent operations
 
 ### Playwright E2E
 
-Playwright covers **3 browser flows** against the real guest-demo application:
+The Playwright suite contains **3 browser flows**:
 
-- guest dashboard access
-- opening a real project board
-- drag-and-drop issue movement with persistence through the issue-move API path
+1. Guest workspace creation and dashboard access
+2. Opening a real project board through the UI
+3. Drag-and-drop issue movement with persisted state
 
-These flows cross the browser, Next.js application, route handlers, cookies, Prisma, and PostgreSQL instead of replacing the application with browser-only mocks.
+The tests cross the actual application stack:
+
+```text
+Browser
+   |
+   v
+Next.js
+   |
+   v
+Route / Server Logic
+   |
+   v
+Prisma
+   |
+   v
+PostgreSQL
+```
 
 ## Continuous Integration
 
-GitHub Actions runs verification on pushes and pull requests.
+GitHub Actions runs the main repository checks on pushes and pull requests.
 
-The pipeline includes:
+The CI flow includes:
 
 ```text
 npm ci
-  |
-  +--> Dependency Audit
-  +--> Prisma Generation
-  +--> Prisma Validation
-  +--> PostgreSQL Schema Setup
-  +--> Lint
-  +--> TypeScript Check
-  +--> Vitest
-  +--> Production Build
-  +--> Playwright E2E
+   |
+   +--> Dependency Audit
+   |
+   +--> Prisma Generation
+   |
+   +--> Prisma Validation
+   |
+   +--> PostgreSQL Schema Setup
+   |
+   +--> Lint
+   |
+   +--> TypeScript Check
+   |
+   +--> Vitest
+   |
+   +--> Production Build
+   |
+   +--> Playwright E2E
 ```
 
-The CI environment uses PostgreSQL for tests that require real database behavior.
+CI uses PostgreSQL for tests that require real database behavior.
 
-CodeQL provides static security analysis, and Dependabot monitors dependency and GitHub Actions updates.
+CodeQL provides static security analysis, while Dependabot monitors dependency and GitHub Actions updates.
 
 ## Security
 
-Security controls include:
+SunGrid includes several security layers:
 
-- Clerk authentication
-- server-side RBAC
-- workspace-scoped Prisma queries
-- Zod validation
-- signed Clerk webhook verification
-- database uniqueness constraints
-- foreign-key constraints
-- security response headers
-- npm dependency auditing
-- CodeQL
-- Dependabot
+* Clerk authentication
+* server-side RBAC
+* workspace-scoped Prisma queries
+* Zod validation for mutation input
+* signed Clerk webhook verification
+* PostgreSQL uniqueness constraints
+* foreign-key constraints
+* security response headers
+* npm dependency auditing
+* CodeQL
+* Dependabot
 
 Configured response headers include:
 
@@ -358,42 +498,90 @@ Permissions-Policy
 
 The final release verification reported **0 known npm vulnerabilities**.
 
-A broad Content Security Policy is not included because Clerk and other runtime integrations require a CSP that is designed and tested around those dependencies rather than adding a restrictive policy just for appearance.
-
 ## Observability
 
-SunGrid uses Sentry and structured server logging for production observability.
+SunGrid uses structured server logging and Sentry.
+
+### Structured Logging
+
+Server-side logs are written as structured JSON.
+
+Operational context can include:
+
+* operation name
+* workspace ID
+* project ID
+* issue ID
+* sprint ID
+* error information
+* Sentry event ID
+
+### Sentry
 
 Sentry is configured for:
 
-- server errors
-- client errors
-- edge/runtime instrumentation
-- Next.js request errors
-- performance tracing
+* server errors
+* client errors
+* edge/runtime instrumentation
+* Next.js request errors
+* performance tracing
 
 Default PII collection is disabled.
 
-Server-side operational errors include useful context such as workspace, project, issue, or sprint identifiers where relevant without logging credentials or secrets.
-
 ## Local Development
 
-Local development and database testing use Docker Compose.
+### Requirements
 
-The development and test databases are separate from the production Neon database.
+* Node.js
+* npm
+* Docker
 
-Typical setup:
+Install dependencies:
 
 ```bash
 npm install
+```
+
+Start the local PostgreSQL environment:
+
+```bash
 npm run db:up
+```
+
+Push the Prisma schema:
+
+```bash
 npm run db:dev:push
+```
+
+Start the application:
+
+```bash
 npm run dev
 ```
 
-A separate PostgreSQL database is used for automated database testing.
+The local development database and automated test database run separately from the production Neon database.
 
-Local database ports are bound to localhost rather than intentionally exposed to the surrounding network.
+## Testing Locally
+
+Prepare the test database:
+
+```bash
+npm run db:up
+npm run db:test:push
+```
+
+Run the Vitest suite:
+
+```bash
+npm test
+```
+
+Run the Playwright E2E suite:
+
+```bash
+npx playwright test
+```
 
 ## Deployment
 
@@ -409,63 +597,46 @@ GitHub Actions
 Vercel
    |
    v
-Next.js
+Next.js Application
    |
    v
 Neon PostgreSQL
 ```
 
-Clerk handles production authentication, and Sentry provides error and performance telemetry.
+Production services are split by responsibility:
 
-The Clerk proxy configuration is environment-aware so local development and Vercel production can use the correct routing behavior.
+* Vercel hosts the Next.js application
+* Neon hosts PostgreSQL
+* Clerk handles authentication
+* Sentry handles error monitoring and tracing
+* GitHub Actions runs repository quality checks
+* CodeQL performs static security analysis
+* Dependabot monitors dependency updates
 
 ## Design Decisions
 
-### Archive Instead of Hard Delete
+### Archive and Restore
 
-Projects and issues use archive/restore workflows instead of normal destructive deletion.
+Projects and issues use archive and restore instead of normal destructive deletion.
 
-Preserving those records keeps historical data available for:
+This keeps historical data available for:
 
-- sprint history
-- reports
-- comments
-- analytics
-- activity history
+* sprint history
+* reports
+* comments
+* analytics
+* activity records
 
 ### Synchronous Sprint Reports
 
-Sprint reports are generated as part of sprint completion.
+Sprint reports are generated when a sprint is completed.
 
-The current workload does not require a background queue, so report generation remains synchronous and transactional.
+The current workflow performs this work inside the sprint completion transaction rather than using a background queue.
 
-A queue could be introduced later if the workload grows enough to require asynchronous processing.
+### Board Working Set
 
-### No Pagination Where It Hurts the Workflow
+The Kanban board keeps the active issue set available together because drag-and-drop operations need the current board state.
 
-Pagination was not added just because a list exists.
+### Activity Consistency
 
-For example, the Kanban board needs the active issue working set together for drag-and-drop behavior, so splitting the board across pages would make the current workflow worse.
-
-## What This Project Demonstrates
-
-SunGrid brings together:
-
-- multi-tenant relational modeling
-- workspace isolation
-- RBAC
-- PostgreSQL constraints
-- Prisma transactions
-- query and index design
-- server-side validation
-- archive/restore lifecycle design
-- real PostgreSQL integration testing
-- browser E2E testing
-- Dockerized database infrastructure
-- CI/CD
-- security scanning
-- structured logging
-- Sentry observability
-- Vercel deployment
-
-The project is focused on the parts that are actually implemented and verified rather than adding extra infrastructure just to make the stack look larger.
+For key project and sprint lifecycle actions, the business mutation and activity event are written inside the same transaction so application state and activity history remain consistent.
