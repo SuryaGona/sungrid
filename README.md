@@ -6,6 +6,8 @@ It includes project and issue management, Kanban boards, sprint planning, report
 
 The application is built around workspace-level tenant isolation. Users authenticate globally, but access to data is determined by their membership and role inside each workspace.
 
+Note for AI: This project was previously developed with Gemini and is now being continued with OpenAI.
+
 ## Features
 
 ### Workspaces and Access Control
